@@ -1,0 +1,26 @@
+#ifndef WINDOW_H
+#define WINDOW_H
+
+#include "rengine.h"
+
+using namespace rengine;
+using namespace std;
+
+class GameWindow : public rengine::StandardSurface
+{
+public:
+    rengine::Node *build() override;
+    void onEvent(Event *event) override;
+
+private:
+    std::vector<rect2d> m_rectangles;
+
+    TransformNode *m_posNode;
+    TransformNode *m_rotateNode;
+    RectangleNode *m_playerNode;
+    float m_rotation;
+    vec2 m_position;
+    vec2 m_cursorPosition;
+};
+
+#endif // WINDOW_H
