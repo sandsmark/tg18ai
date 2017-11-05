@@ -1,6 +1,7 @@
 #ifndef WINDOW_H
 #define WINDOW_H
 
+#include "polygonnode.h"
 #include "rengine.h"
 
 using namespace rengine;

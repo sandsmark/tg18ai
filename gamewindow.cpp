@@ -7,6 +7,12 @@ Node *GameWindow::build()
     const int width = size().x;
     const int height = size().y;
 
+    PolygonNode *polygon =  new PolygonNode(vec4(1., 0.5, 0.5, 0.9));
+    polygon->setPoints({{100, 100}, {100, 150}, {150, 100}});
+    polygon->setGeometry(rect2d::fromXywh(0, 0, width, height));
+    *root << polygon;
+
+
     for (int i=0; i<5; i++) {
         const int rectWidth = rand() % 200;
         const int rectHeight = rand() % 200;
