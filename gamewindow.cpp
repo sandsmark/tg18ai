@@ -40,3 +40,14 @@ void GameWindow::onEvent(Event *event)
         requestRender();
     }
 }
+
+shared_ptr<Player> GameWindow::getPlayerAt(vec2 position)
+{
+    for (shared_ptr<Player> player : m_players) {
+        if (player->geometry().contains(position)) {
+            return player;
+        }
+    }
+
+    return nullptr;
+}

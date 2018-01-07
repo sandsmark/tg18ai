@@ -25,19 +25,22 @@ public:
     GameWindow *world() { return m_world; }
 
     vec2 position() const { return m_position; }
+    rect2d geometry() const;
+
+    void die();
 
 private:
     void updateVisibility();
 
-    Node *m_rootNode;
-    TransformNode *m_posNode;
-    TransformNode *m_rotateNode;
-    RectangleNode *m_playerNode;
+    Node *m_rootNode = nullptr;
+    TransformNode *m_posNode = nullptr;
+    TransformNode *m_rotateNode = nullptr;
+    RectangleNode *m_playerNode = nullptr;
     float m_rotation;
     vec2 m_position;
     vec2 m_cursorPosition;
-    PolygonNode *m_polygon;
-    GameWindow *m_world;
+    PolygonNode *m_polygon = nullptr;
+    GameWindow *m_world = nullptr;
     vec4 m_color;
 };
 
@@ -51,13 +54,14 @@ public:
     void setOwner(Player *owner);
     void setTarget(vec2 target);
     void start();
+    void checkHit();
 
     static Bullet *create(Player *owner, vec2 target, vec4 color) {
         Bullet *node = create();
         node->setOwner(owner);
         node->setTarget(target);
         node->setColor(color);
-        node->setGeometry(rect2d::fromPosSize(owner->position(), vec2(2, 2)));
+        node->setGeometry(rect2d::fromPosSize(owner->position() - vec2(3, 3), vec2(6, 6)));
 
         return node;
     }

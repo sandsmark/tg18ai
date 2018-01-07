@@ -16,6 +16,8 @@ public:
     void onEvent(Event *event) override;
     const vector<rect2d> &rectangles() const { return m_rectangles; }
 
+    shared_ptr<Player> getPlayerAt(vec2 position);
+
 private:
     vector<rect2d> m_rectangles;
     vector<shared_ptr<Player>> m_players;

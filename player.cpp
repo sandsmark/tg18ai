@@ -47,9 +47,25 @@ void Bullet::start()
         destroy();
     });
 
+    onXChanged.connect(this, [=]() { checkHit(); });
+    onYChanged.connect(this, [=]() { checkHit(); });
+
     m_world->animationManager()->start(m_xAnimation);
     m_world->animationManager()->start(m_yAnimation);
 
+}
+
+void Bullet::checkHit()
+{
+    assert(m_world);
+    assert(m_owner);
+
+    shared_ptr<Player> target = m_world->getPlayerAt(position());
+    if (!target || target.get() == m_owner) {
+        return;
+    }
+
+    target->die();
 }
 
 Player::Player(const vec4 color, GameWindow *world) :
@@ -59,7 +75,7 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_rootNode = Node::create();
 
     vec4 polygonColor = color;
-    polygonColor.w = 0.3;
+    polygonColor.w = 0.1;
     m_polygon =  new PolygonNode(polygonColor);
     *m_rootNode << m_polygon;
 
@@ -75,7 +91,7 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_rotateNode->setMatrix(mat4::rotate2D(m_rotation));
     *m_posNode << m_rotateNode;
 
-    m_playerNode = RectangleNode::create(rect2d::fromXywh(-5, -5, 10, 10), color);
+    m_playerNode = RectangleNode::create(rect2d::fromXywh(-10, -10, 20, 20), color);
     *m_rotateNode << m_playerNode;
 
     updateVisibility();
@@ -124,6 +140,8 @@ bool Player::handleEvent(Event *event)
         case KeyEvent::Key_R:
             m_position = vec2(rand() % int(m_world->size().x / 2) + m_world->size().y/4, rand() % int(m_world->size().x/2) + m_world->size().y/4);
             m_posNode->setMatrix(mat4::translate2D(m_position));
+            m_playerNode->setColor(m_color);
+            updateVisibility();
             return true;
         default:
             return false;
@@ -202,6 +220,19 @@ bool Player::handleEvent(Event *event)
     updateVisibility();
 
     return true;
+}
+
+rect2d Player::geometry() const
+{
+    assert(m_playerNode);
+    rect2d orig = m_playerNode->geometry();
+    mat4 matrix = TransformNode::matrixFor(m_playerNode, m_world->renderer()->sceneRoot());
+    return rect2d(matrix * orig.tl, matrix * orig.br).normalized();
+}
+
+void Player::die()
+{
+    m_playerNode->setColor(vec4(0, 0, 0, 0));
 }
 
 struct Line {
