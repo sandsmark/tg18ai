@@ -7,6 +7,7 @@ CONFIG -= qt
 SOURCES += main.cpp \
     gamewindow.cpp \
     polygonnode.cpp \
+    player.cpp
 
 LIBS += -lSDL2 -lGLEW -lGL -lpthread
 DEFINES += RENGINE_BACKEND_SDL RENGINE_LOG_WARNING RENGINE_LOG_ERROR RENGINE_OPENGL_DESKTOP
@@ -17,3 +18,4 @@ INCLUDEPATH += ../rengine/include/ /usr/include/SDL2/
 HEADERS += \
     gamewindow.h \
     polygonnode.h \
+    player.h
