@@ -1,11 +1,62 @@
 #include "player.h"
 #include "gamewindow.h"
 
+Bullet::Bullet() :
+    m_xAnimation(make_shared<RectangleXAnimation>(this)),
+    m_yAnimation(make_shared<RectangleYAnimation>(this))
+{
+}
+
+void Bullet::setOwner(Player *owner)
+{
+    m_owner = owner;
+    m_world = owner->world();
+}
+
+void Bullet::setTarget(vec2 target)
+{
+    m_target = target;
+
+    m_xAnimation->keyFrames().clear();
+    m_xAnimation->keyFrames().push_back(KeyFrame<float>(0, m_owner->position().x));
+    m_xAnimation->keyFrames().push_back(KeyFrame<float>(1, target.x));
+
+    m_yAnimation->keyFrames().clear();
+    m_yAnimation->keyFrames().push_back(KeyFrame<float>(0, m_owner->position().y));
+    m_yAnimation->keyFrames().push_back(KeyFrame<float>(1, target.y));
+}
+
+void Bullet::start()
+{
+    m_xAnimation->setIterations(1);
+    m_xAnimation->setDuration(4);
+
+    m_yAnimation->setIterations(1);
+    m_yAnimation->setDuration(4);
+
+    m_xAnimation->onCompleted.connect(m_xAnimation.get(), [=](){
+        if (m_yAnimation->isRunning()) {
+            return;
+        }
+        destroy();
+    });
+    m_yAnimation->onCompleted.connect(m_yAnimation.get(), [=](){
+        if (m_xAnimation->isRunning()) {
+            return;
+        }
+        destroy();
+    });
+
+    m_world->animationManager()->start(m_xAnimation);
+    m_world->animationManager()->start(m_yAnimation);
+
+}
+
 Player::Player(const vec4 color, GameWindow *world) :
-    m_world(world)
+    m_world(world),
+    m_color(color)
 {
     m_rootNode = Node::create();
-
 
     vec4 polygonColor = color;
     polygonColor.w = 0.3;
@@ -46,6 +97,12 @@ bool Player::handleEvent(Event *event)
     case Event::PointerMove:
         m_cursorPosition = PointerEvent::from(event)->position();
         break;
+    case Event::PointerDown: {
+        Bullet *bullet = Bullet::create(this, PointerEvent::from(event)->position(), m_color);
+        *m_rootNode << bullet;
+        bullet->start();
+        return true;
+    }
     case Event::KeyDown: {
         KeyEvent *keyEvent = KeyEvent::from(event);
         switch(keyEvent->keyCode()) {
