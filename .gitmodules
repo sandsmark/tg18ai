@@ -1,0 +1,3 @@
+[submodule "extern/rengine"]
+	path = extern/rengine
+	url = git@github.com:sandsmark/rengine.git
