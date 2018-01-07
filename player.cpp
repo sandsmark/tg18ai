@@ -29,10 +29,10 @@ void Bullet::setTarget(vec2 target)
 void Bullet::start()
 {
     m_xAnimation->setIterations(1);
-    m_xAnimation->setDuration(4);
+    m_xAnimation->setDuration(0.5);
 
     m_yAnimation->setIterations(1);
-    m_yAnimation->setDuration(4);
+    m_yAnimation->setDuration(0.5);
 
     m_xAnimation->onCompleted.connect(m_xAnimation.get(), [=](){
         if (m_yAnimation->isRunning()) {

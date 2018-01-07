@@ -26,6 +26,7 @@ Node *GameWindow::build()
         *root << player->node();
     }
 
+
     return root;
 }
 

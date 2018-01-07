@@ -11,8 +11,6 @@ PolygonNode::PolygonNode(vec4 color) :
     m_shaderProgram.initialize(openglrenderer_vsh_solid(), openglrenderer_fsh_solid(), attrsV);
     m_shaderProgram.matrix = m_shaderProgram.resolve("m");
     m_shaderProgram.color = m_shaderProgram.resolve("color");
-    std::cout << m_shaderProgram.matrix << std::endl;
-    std::cout << m_shaderProgram.color << std::endl;
 
     m_vertices = (vec2 *) malloc(vertexCount * sizeof(vec2));
     m_vertices[0] = vec2(100, 100);
@@ -27,8 +25,6 @@ PolygonNode::PolygonNode(vec4 color) :
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(vec2), m_vertices, GL_STATIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    std::cout << m_vertexBuffer << std::endl;
 }
 
 PolygonNode::~PolygonNode()
