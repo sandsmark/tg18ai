@@ -14,6 +14,8 @@ public:
     void onEvent(Event *event) override;
 
 private:
+    void updateVisibility();
+
     std::vector<rect2d> m_rectangles;
 
     TransformNode *m_posNode;
@@ -22,6 +24,7 @@ private:
     float m_rotation;
     vec2 m_position;
     vec2 m_cursorPosition;
+    PolygonNode *m_polygon;
 };
 
 #endif // WINDOW_H

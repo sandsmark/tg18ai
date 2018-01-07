@@ -56,7 +56,7 @@ void PolygonNode::render()
     glUniformMatrix4fv(m_shaderProgram.matrix, 1, true, proj.m);
     glUniform4f(m_shaderProgram.color, m_color.x * m_color.w, m_color.y * m_color.w, m_color.z * m_color.w, m_color.w);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
-    glDrawArrays(GL_TRIANGLE_STRIP, 0, m_points.size());
+    glDrawArrays(GL_TRIANGLE_FAN, 0, m_points.size());
 
     glUseProgram(0);
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
