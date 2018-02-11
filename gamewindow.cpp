@@ -59,6 +59,9 @@ void GameWindow::onEvent(Event *event)
         needRender = player->handleEvent(event) || needRender;
 
         player->sendUpdate();
+        if (needRender) {
+            break;
+        }
     }
 
     if (needRender) {
@@ -89,4 +92,11 @@ bool GameWindow::onNewClient(std::shared_ptr<tcp_client> client)
 
     cerr << "Unable to find free player" << endl;
     return false;
+}
+
+void GameWindow::onBeforeRender()
+{
+    for (shared_ptr<Player> player : m_players) {
+        player->update();
+    }
 }

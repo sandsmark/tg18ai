@@ -44,6 +44,8 @@ public:
 
     json::JSON serializeState() const;
 
+    void update();
+
 private:
     void onTcpMessage(const tcp_client::read_result& res);
     void updateVisibility();
@@ -61,6 +63,10 @@ private:
     shared_ptr<tcp_client> m_tcpConnection;
     string m_networkBuffer;
     bool m_dead = false;
+
+    mutex m_commandMutex;
+    string m_command;
+    vector<string> m_arguments;
 };
 
 class Bullet : public RectangleNode

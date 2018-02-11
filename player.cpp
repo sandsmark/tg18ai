@@ -4,6 +4,8 @@
 
 #include <SimpleJSON/json.hpp>
 
+#include <mutex>
+
 Bullet::Bullet() :
     m_xAnimation(make_shared<RectangleXAnimation>(this)),
     m_yAnimation(make_shared<RectangleYAnimation>(this))
@@ -104,7 +106,7 @@ Player::Player(const vec4 color, GameWindow *world) :
 Player::~Player()
 {
     if (m_tcpConnection && m_tcpConnection->is_connected()) {
-        m_tcpConnection->disconnect();
+        m_tcpConnection->disconnect(true);
     }
 }
 
@@ -240,6 +242,7 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
     bottomLeft  = translationMatrix * bottomLeft;
     bottomRight = translationMatrix * bottomRight;
 
+    updateVisibility();
     if (requestedPosition == m_position && rotation == m_rotation) {
         return false;
     }
@@ -249,7 +252,6 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
 
     m_posNode->setMatrix(mat4::translate2D(m_position));
     m_rotateNode->setMatrix(mat4::rotate2D(m_rotation));
-    updateVisibility();
 
     return true;
 }
@@ -319,6 +321,21 @@ json::JSON Player::serializeState() const
     return state;
 }
 
+void Player::update()
+{
+    if (!isActive()) {
+        return;
+    }
+
+    m_commandMutex.lock();
+    if (!m_command.empty()) {
+        handleCommand(m_command, m_arguments);
+    }
+    m_command.clear();
+    m_arguments.clear();
+    m_commandMutex.unlock();
+}
+
 void Player::onTcpMessage(const tcp_client::read_result &res)
 {
     if (!res.success) {
@@ -369,15 +386,19 @@ void Player::onTcpMessage(const tcp_client::read_result &res)
         command = line;
     }
 
-    if (handleCommand(command, arguments)) {
-        m_world->requestRender();
-    }
-
     if (lastNewline == m_networkBuffer.size() - 1) {
         m_networkBuffer.clear();
     } else {
         m_networkBuffer = m_networkBuffer.substr(lastNewline);
     }
+
+    m_commandMutex.lock();
+    m_arguments = arguments;
+    m_command = command;
+    m_commandMutex.unlock();
+
+    requestPreprocess();
+    m_world->requestRender();
 }
 
 struct Line {

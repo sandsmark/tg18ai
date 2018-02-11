@@ -31,6 +31,9 @@ public:
 
     bool onNewClient(std::shared_ptr<tacopie::tcp_client> client);
 
+
+    void onBeforeRender() override;
+
 private:
     vector<rect2d> m_rectangles;
     vector<shared_ptr<Player>> m_players;
