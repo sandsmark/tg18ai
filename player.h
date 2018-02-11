@@ -4,6 +4,7 @@
 #include "rengine.h"
 
 #include <tacopie/network/tcp_client.hpp>
+#include <SimpleJSON/json.hpp>
 
 class PolygonNode;
 class GameWindow;
@@ -39,6 +40,10 @@ public:
 
     bool isActive() const;
 
+    void sendUpdate() const;
+
+    json::JSON serializeState() const;
+
 private:
     void onTcpMessage(const tcp_client::read_result& res);
     void updateVisibility();
@@ -55,6 +60,7 @@ private:
     vec4 m_color;
     shared_ptr<tcp_client> m_tcpConnection;
     vector<char> m_networkBuffer;
+    bool m_dead = false;
 };
 
 class Bullet : public RectangleNode

@@ -5,6 +5,7 @@
 
 #include "rengine.h"
 
+#include <SimpleJSON/json.hpp>
 #include <tacopie/network/tcp_server.hpp>
 
 class Player;

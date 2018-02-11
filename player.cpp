@@ -1,5 +1,8 @@
 #include "player.h"
+
 #include "gamewindow.h"
+
+#include <SimpleJSON/json.hpp>
 
 Bullet::Bullet() :
     m_xAnimation(make_shared<RectangleXAnimation>(this)),
@@ -261,6 +264,7 @@ rect2d Player::geometry() const
 
 void Player::die()
 {
+    m_dead = true;
     m_playerNode->setColor(vec4(0, 0, 0, 0));
 }
 
@@ -285,6 +289,34 @@ void Player::setTcpConnection(shared_ptr<tacopie::tcp_client> conn)
 bool Player::isActive() const
 {
     return m_tcpConnection && m_tcpConnection->is_connected();
+}
+
+void Player::sendUpdate() const
+{
+    if (!m_tcpConnection) {
+        return;
+    }
+
+    json::JSON message;
+    message["type"] = "update";
+    message["you"] = serializeState();
+    string serialized = message.dump(1, " ", " ") + "\n";
+
+    m_tcpConnection->async_write({vector<char>(serialized.begin(), serialized.end()), nullptr});
+}
+
+json::JSON Player::serializeState() const
+{
+    json::JSON state;
+
+    state["x"] = m_position.x;
+    state["y"] = m_position.y;
+    state["pointing_at_x"] = m_cursorPosition.x;
+    state["pointing_at_y"] = m_cursorPosition.y;
+    state["rotation"] = m_rotation;
+    state["alive"] = !m_dead;
+
+    return state;
 }
 
 void Player::onTcpMessage(const tcp_client::read_result &res)

@@ -57,6 +57,8 @@ void GameWindow::onEvent(Event *event)
     bool needRender = false;
     for (shared_ptr<Player> player : m_players) {
         needRender = player->handleEvent(event) || needRender;
+
+        player->sendUpdate();
     }
 
     if (needRender) {
