@@ -14,8 +14,8 @@ using namespace std;
 
 using tacopie::tcp_client;
 
-typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setX> RectangleXAnimation;
-typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setY> RectangleYAnimation;
+typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setX, &AnimationCurves::linear> RectangleXAnimation;
+typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setY, &AnimationCurves::linear> RectangleYAnimation;
 
 class Player : Node
 {
