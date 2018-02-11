@@ -59,7 +59,7 @@ private:
     GameWindow *m_world = nullptr;
     vec4 m_color;
     shared_ptr<tcp_client> m_tcpConnection;
-    vector<char> m_networkBuffer;
+    string m_networkBuffer;
     bool m_dead = false;
 };
 

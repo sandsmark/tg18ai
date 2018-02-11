@@ -338,19 +338,20 @@ void Player::onTcpMessage(const tcp_client::read_result &res)
         m_tcpConnection->async_read(req);
     }
 
-    m_networkBuffer.insert(m_networkBuffer.end(), res.buffer.begin(), res.buffer.end());
+    m_networkBuffer += std::string(res.buffer.begin(), res.buffer.end());
 
-    vector<char>::reverse_iterator lastNewline = std::find(m_networkBuffer.rbegin(), m_networkBuffer.rend(), '\n');
-
-    if (lastNewline == m_networkBuffer.rend()) {
+    string::size_type lastNewline = m_networkBuffer.rfind("\n");
+    if (lastNewline == string::npos) {
         // No newline yet, hopefully comes in next packet
         return;
     }
 
-    vector<char>::reverse_iterator prevNewline = std::find(lastNewline + 1, m_networkBuffer.rend(), '\n');
-    string line(lastNewline + 1, prevNewline);
-    // im lazy
-    reverse(line.begin(), line.end());
+
+    string::size_type prevNewline = m_networkBuffer.rfind("\n", lastNewline - 1);
+    if (prevNewline == string::npos) {
+        prevNewline = 0;
+    }
+    string line = m_networkBuffer.substr(prevNewline, lastNewline);
 
     vector<string> arguments;
     istringstream stream(line);
@@ -372,13 +373,11 @@ void Player::onTcpMessage(const tcp_client::read_result &res)
         m_world->requestRender();
     }
 
-    if (lastNewline == m_networkBuffer.rbegin()) {
-        // No more data left over
+    if (lastNewline == m_networkBuffer.size() - 1) {
         m_networkBuffer.clear();
-        return;
+    } else {
+        m_networkBuffer = m_networkBuffer.substr(lastNewline);
     }
-
-    m_networkBuffer = vector<char>(m_networkBuffer.rbegin(), lastNewline);
 }
 
 struct Line {
