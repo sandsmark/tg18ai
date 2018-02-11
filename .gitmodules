@@ -1,3 +1,9 @@
 [submodule "extern/rengine"]
 	path = extern/rengine
 	url = git@github.com:sandsmark/rengine.git
+[submodule "extern/SimpleJSON"]
+	path = extern/SimpleJSON
+	url = git@github.com:nbsdx/SimpleJSON.git
+[submodule "extern/tacopie"]
+	path = extern/tacopie
+	url = git@github.com:Cylix/tacopie.git
