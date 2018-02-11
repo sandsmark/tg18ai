@@ -98,6 +98,13 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_polygon->setGeometry(rect2d::fromXywh(0, 0, m_world->size().x, m_world->size().y));
 }
 
+Player::~Player()
+{
+    if (m_tcpConnection && m_tcpConnection->is_connected()) {
+        m_tcpConnection->disconnect();
+    }
+}
+
 Node *Player::node()
 {
     return m_rootNode;
@@ -105,34 +112,40 @@ Node *Player::node()
 
 bool Player::handleEvent(Event *event)
 {
-    vec2 requestedPosition = m_position;
+    // check if we're remote controlled
+    if (isActive()) {
+        return false;
+    }
 
-    int horizontal = 0;
-    int vertical = 0;
+    string command;
+    vector<string> arguments;
+
     switch(event->type()) {
-    case Event::PointerMove:
-        m_cursorPosition = PointerEvent::from(event)->position();
+    case Event::PointerMove: {
+        vec2 cursorPos = PointerEvent::from(event)->position();
+        command = "POINT_AT";
+        arguments.push_back(to_string(cursorPos.x));
+        arguments.push_back(to_string(cursorPos.y));
         break;
+    }
     case Event::PointerDown: {
-        Bullet *bullet = Bullet::create(this, PointerEvent::from(event)->position(), m_color);
-        *m_rootNode << bullet;
-        bullet->start();
-        return true;
+        command = "FIRE";
+        break;
     }
     case Event::KeyDown: {
         KeyEvent *keyEvent = KeyEvent::from(event);
         switch(keyEvent->keyCode()) {
         case KeyEvent::Key_Up:
-            vertical = 10;
+            command = "FORWARD";
             break;
         case KeyEvent::Key_Down:
-            vertical = -10;
+            command = "BACKWARD";
             break;
         case KeyEvent::Key_Left:
-            horizontal = -10;
+            command = "STRAFE_LEFT";
             break;
         case KeyEvent::Key_Right:
-            horizontal = 10;
+            command = "STRAFE_RIGHT";
             break;
         case KeyEvent::Key_Escape:
             Backend::get()->quit();
@@ -148,12 +161,43 @@ bool Player::handleEvent(Event *event)
         }
         break;
     }
-
-    case Event::KeyUp: {
-        std::cout << "key up: " << KeyEvent::from(event)->keyCode() << std::endl;
-        break;
-    }
     default:
+        return false;
+    }
+
+    return handleCommand(command, arguments);
+}
+
+bool Player::handleCommand(const string &command, const vector<string> &arguments)
+{
+    vec2 requestedPosition = m_position;
+
+    int horizontal = 0;
+    int vertical = 0;
+
+    if (command == "POINT_AT") {
+        if (arguments.size() != 2) {
+            cerr << "Invalid POINT_AT, no coordinates";
+            return false;
+        }
+
+        m_cursorPosition.x = stof(arguments[0]);
+        m_cursorPosition.y = stof(arguments[1]);
+    } else if (command == "FIRE") {
+        Bullet *bullet = Bullet::create(this, m_cursorPosition, m_color);
+        *m_rootNode << bullet;
+        bullet->start();
+        return true;
+    } else if (command == "STRAFE_LEFT") {
+        horizontal = -10;
+    } else if (command == "STRAFE_RIGHT") {
+        horizontal = 10;
+    } else if (command == "FORWARD") {
+        vertical = 10;
+    } else if (command == "BACKWARD") {
+        vertical = -10;
+    } else {
+        cerr << "unknown command '" << command << "'" << endl;
         return false;
     }
 
@@ -193,21 +237,6 @@ bool Player::handleEvent(Event *event)
     bottomLeft  = translationMatrix * bottomLeft;
     bottomRight = translationMatrix * bottomRight;
 
-//    for (const rect2d &block : m_rectangles) {
-//        if (block.contains(topLeft)) {
-//            return false;
-//        }
-//        if (block.contains(topRight)) {
-//            return false;
-//        }
-//        if (block.contains(bottomLeft)) {
-//            return false;
-//        }
-//        if (block.contains(bottomRight)) {
-//            return false;
-//        }
-//    }
-
     if (requestedPosition == m_position && rotation == m_rotation) {
         return false;
     }
@@ -233,6 +262,91 @@ rect2d Player::geometry() const
 void Player::die()
 {
     m_playerNode->setColor(vec4(0, 0, 0, 0));
+}
+
+void Player::setTcpConnection(shared_ptr<tacopie::tcp_client> conn)
+{
+    m_tcpConnection = conn;
+
+    if (!conn) {
+        cerr << "Handed null connection" << endl;
+        return;
+    }
+
+    tcp_client::read_request req;
+    req.size = 1024;
+    req.async_read_callback = [=](const tcp_client::read_result &result) {
+        this->onTcpMessage(result);
+    };
+
+    m_tcpConnection->async_read(req);
+}
+
+bool Player::isActive() const
+{
+    return m_tcpConnection && m_tcpConnection->is_connected();
+}
+
+void Player::onTcpMessage(const tcp_client::read_result &res)
+{
+    if (!res.success) {
+        cerr << "Error when reading" << endl;
+        m_tcpConnection.reset();
+        return;
+    }
+
+    // Make sure we read more
+    if (m_tcpConnection) {
+        tcp_client::read_request req;
+        req.size = 1024;
+        req.async_read_callback = [=](const tcp_client::read_result &result){
+            this->onTcpMessage(result);
+        };
+
+        m_tcpConnection->async_read(req);
+    }
+
+    m_networkBuffer.insert(m_networkBuffer.end(), res.buffer.begin(), res.buffer.end());
+
+    vector<char>::reverse_iterator lastNewline = std::find(m_networkBuffer.rbegin(), m_networkBuffer.rend(), '\n');
+
+    if (lastNewline == m_networkBuffer.rend()) {
+        // No newline yet, hopefully comes in next packet
+        return;
+    }
+
+    vector<char>::reverse_iterator prevNewline = std::find(lastNewline + 1, m_networkBuffer.rend(), '\n');
+    string line(lastNewline + 1, prevNewline);
+    // im lazy
+    reverse(line.begin(), line.end());
+
+    vector<string> arguments;
+    istringstream stream(line);
+    string argument;
+    string command;
+    while (getline(stream, argument, ' ')) {
+        if (command.empty()) {
+            command = argument;
+        } else {
+            arguments.push_back(argument);
+        }
+    }
+
+    if (arguments.empty()) {
+        command = line;
+    }
+
+    if (handleCommand(command, arguments)) {
+        m_world->requestRender();
+    }
+
+    if (lastNewline == m_networkBuffer.rbegin()) {
+        // No more data left over
+        m_networkBuffer.clear();
+        return;
+    }
+
+    m_networkBuffer = vector<char>(m_networkBuffer.rbegin(), lastNewline);
 }
 
 struct Line {

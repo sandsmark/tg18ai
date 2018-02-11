@@ -2,9 +2,16 @@
 #define WINDOW_H
 
 #include "polygonnode.h"
+
 #include "rengine.h"
 
+#include <tacopie/network/tcp_server.hpp>
+
 class Player;
+
+
+using tacopie::tcp_client;
+using tacopie::tcp_server;
 
 using namespace rengine;
 using namespace std;
@@ -12,15 +19,21 @@ using namespace std;
 class GameWindow : public rengine::StandardSurface
 {
 public:
+    GameWindow();
+    ~GameWindow();
+
     rengine::Node *build() override;
     void onEvent(Event *event) override;
     const vector<rect2d> &rectangles() const { return m_rectangles; }
 
     shared_ptr<Player> getPlayerAt(vec2 position);
 
+    bool onNewClient(std::shared_ptr<tacopie::tcp_client> client);
+
 private:
     vector<rect2d> m_rectangles;
     vector<shared_ptr<Player>> m_players;
+    tcp_server m_tcpServer;
 };
 
 #endif // WINDOW_H

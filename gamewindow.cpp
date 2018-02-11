@@ -2,6 +2,28 @@
 
 #include "player.h"
 
+#include <tacopie/utils/error.hpp>
+
+
+GameWindow::GameWindow()
+{
+    try {
+        m_tcpServer.start("127.0.0.1", 1337, [=] (const std::shared_ptr<tcp_client>& client) -> bool {
+            std::cout << "New client" << std::endl;
+            return this->onNewClient(client);
+        });
+    } catch (const tacopie::tacopie_error &error) {
+        cerr << "error when listening: " << error.what() << endl;
+        Backend::get()->quit();
+        return;
+    }
+}
+
+GameWindow::~GameWindow()
+{
+    m_tcpServer.stop(true, true);
+}
+
 Node *GameWindow::build()
 {
     Node *root = Node::create();
@@ -51,4 +73,18 @@ shared_ptr<Player> GameWindow::getPlayerAt(vec2 position)
     }
 
     return nullptr;
+}
+
+bool GameWindow::onNewClient(std::shared_ptr<tcp_client> client)
+{
+    for (shared_ptr<Player> player : m_players) {
+        if (player->isActive()) {
+            continue;
+        }
+        player->setTcpConnection(client);
+        return true;
+    }
+
+    cerr << "Unable to find free player" << endl;
+    return false;
 }

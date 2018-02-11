@@ -14,8 +14,10 @@ DEFINES += RENGINE_BACKEND_SDL RENGINE_LOG_WARNING RENGINE_LOG_ERROR RENGINE_OPE
 QMAKE_CXXFLAGS +=  -Wno-unused-parameter -std=c++17
 INCLUDEPATH += extern/rengine/include/ /usr/include/SDL2/
 
-
 HEADERS += \
     gamewindow.h \
     polygonnode.h \
     player.h
+
+
+include(extern/tacopie.pri)

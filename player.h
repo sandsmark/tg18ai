@@ -3,12 +3,16 @@
 
 #include "rengine.h"
 
+#include <tacopie/network/tcp_client.hpp>
+
 class PolygonNode;
 class GameWindow;
 class Player;
 
 using namespace rengine;
 using namespace std;
+
+using tacopie::tcp_client;
 
 typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setX> RectangleXAnimation;
 typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setY> RectangleYAnimation;
@@ -17,10 +21,13 @@ class Player : Node
 {
 public:
     Player(const vec4 color, GameWindow *world);
+    ~Player();
 
     Node *node();
 
     bool handleEvent(Event *event);
+
+    bool handleCommand(const string &command, const vector<string> &arguments);
 
     GameWindow *world() { return m_world; }
 
@@ -28,8 +35,12 @@ public:
     rect2d geometry() const;
 
     void die();
+    void setTcpConnection(shared_ptr<tcp_client> conn);
+
+    bool isActive() const;
 
 private:
+    void onTcpMessage(const tcp_client::read_result& res);
     void updateVisibility();
 
     Node *m_rootNode = nullptr;
@@ -42,6 +53,8 @@ private:
     PolygonNode *m_polygon = nullptr;
     GameWindow *m_world = nullptr;
     vec4 m_color;
+    shared_ptr<tcp_client> m_tcpConnection;
+    vector<char> m_networkBuffer;
 };
 
 class Bullet : public RectangleNode

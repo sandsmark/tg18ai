@@ -17,6 +17,7 @@ RENGINE_ALLOCATION_POOL_DEFINITION(Bullet, BulletNode);
 
 void sigintHandler(int)
 {
+    cout << "quitting gracefully" << endl;
     Backend::get()->quit();
 }
 
