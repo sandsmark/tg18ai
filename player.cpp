@@ -101,6 +101,8 @@ Player::Player(const vec4 color, GameWindow *world) :
 
     updateVisibility();
     m_polygon->setGeometry(rect2d::fromXywh(0, 0, m_world->size().x, m_world->size().y));
+
+    m_nameNode = TextureNode::create();
 }
 
 Player::~Player()
@@ -180,7 +182,19 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
     int horizontal = 0;
     int vertical = 0;
 
-    if (command == "POINT_AT") {
+    if (command == "NAME") {
+        if (arguments.size() != 1) {
+            cerr << "no name given to name command" << endl;
+            return false;
+        }
+        std::shared_ptr<GlyphTextureJob> textJob = std::make_shared<GlyphTextureJob>(m_world->font(), arguments[0], Units(m_world).font());
+        // FIXME when we can emit this in the right thread
+        textJob->onExecute();
+//        textJob->onFinished.connect(textJob.get(), [=](){
+            m_nameNode->setTexture(m_world->renderer()->createTextureFromImageData(textJob->textureSize(), textJob->textureData()));
+//        });
+        m_world->workQueue()->schedule(textJob);
+    } else if (command == "POINT_AT") {
         if (arguments.size() != 2) {
             cerr << "Invalid POINT_AT, no coordinates";
             return false;

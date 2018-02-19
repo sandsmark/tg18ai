@@ -26,6 +26,14 @@ GameWindow::~GameWindow()
 
 Node *GameWindow::build()
 {
+    const char *fontFile = "Perfect_Dark_Zero.ttf";
+    m_font = new GlyphContext(fontFile);
+    if (!m_font->isValid()) {
+        cerr << "Failed to load '" << fontFile << endl;
+    }
+
+    assert(m_font->isValid());
+
     Node *root = Node::create();
 
     const int width = size().x;

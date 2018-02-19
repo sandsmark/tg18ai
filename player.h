@@ -67,6 +67,8 @@ private:
     mutex m_commandMutex;
     string m_command;
     vector<string> m_arguments;
+
+    TextureNode *m_nameNode;
 };
 
 class Bullet : public RectangleNode

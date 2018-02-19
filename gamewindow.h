@@ -31,6 +31,8 @@ public:
 
     bool onNewClient(std::shared_ptr<tacopie::tcp_client> client);
 
+    GlyphContext *font() const { return m_font; }
+
 
     void onBeforeRender() override;
 
@@ -38,6 +40,7 @@ private:
     vector<rect2d> m_rectangles;
     vector<shared_ptr<Player>> m_players;
     tcp_server m_tcpServer;
+    GlyphContext *m_font = nullptr;
 };
 
 #endif // WINDOW_H
