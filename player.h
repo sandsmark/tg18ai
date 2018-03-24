@@ -18,7 +18,7 @@ using tacopie::tcp_client;
 typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setX, &AnimationCurves::linear> RectangleXAnimation;
 typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setY, &AnimationCurves::linear> RectangleYAnimation;
 
-class Player : Node
+class Player : public Node
 {
 public:
     const int id;
@@ -40,6 +40,7 @@ public:
     vec2 position() const { return m_position; }
     rect2d geometry() const;
 
+    void reset();
     void die();
     void setTcpConnection(shared_ptr<tcp_client> conn);
 
@@ -51,6 +52,8 @@ public:
     json::JSON serializeState() const;
 
     void update();
+
+    void setName(const string &name);
 
 private:
     void onTcpMessage(const tcp_client::read_result& res);

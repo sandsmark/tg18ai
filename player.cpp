@@ -81,6 +81,7 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_color(color)
 {
     m_rootNode = Node::create();
+    *this << m_rootNode;
 
     vec4 polygonColor = color;
     polygonColor.w = 0.1;
@@ -308,16 +309,33 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
 
 rect2d Player::geometry() const
 {
+    if (m_dead) {
+        return rect2d();
+    }
+
     assert(m_playerNode);
     rect2d orig = m_playerNode->geometry();
     mat4 matrix = TransformNode::matrixFor(m_playerNode, m_world->renderer()->sceneRoot());
     return rect2d(matrix * orig.tl, matrix * orig.br).normalized();
 }
 
+void Player::reset()
+{
+    if (m_dead) {
+        *this << m_rootNode;
+    }
+
+    m_dead = false;
+}
+
 void Player::die()
 {
+    if (m_dead) {
+        return;
+    }
+
     m_dead = true;
-    m_playerNode->setColor(vec4(0, 0, 0, 0));
+    remove(m_rootNode);
 }
 
 void Player::setTcpConnection(shared_ptr<tacopie::tcp_client> conn)

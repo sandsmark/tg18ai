@@ -56,7 +56,7 @@ Node *GameWindow::build()
     m_players.push_back(make_shared<Player>(vec4(.5, .5, 1, 1), this));
 
     for (shared_ptr<Player> player : m_players) {
-        *root << player->node();
+        *root << player.get();
     }
 
 
@@ -84,6 +84,10 @@ void GameWindow::onEvent(Event *event)
 shared_ptr<Player> GameWindow::getPlayerAt(vec2 position)
 {
     for (shared_ptr<Player> player : m_players) {
+        if (!player->isAlive()) {
+            continue;
+        }
+
         if (player->geometry().contains(position)) {
             return player;
         }
