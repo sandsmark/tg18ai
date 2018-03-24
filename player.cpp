@@ -110,6 +110,8 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_polygon->setGeometry(rect2d::fromXywh(0, 0, m_world->size().x, m_world->size().y));
 
     m_nameNode = TextureNode::create();
+    *m_posNode << m_nameNode;
+    setName("Bot " + to_string(id));
 }
 
 Player::~Player()
@@ -202,13 +204,7 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
             cerr << "no name given to name command" << endl;
             return false;
         }
-        std::shared_ptr<GlyphTextureJob> textJob = std::make_shared<GlyphTextureJob>(m_world->font(), arguments[0], Units(m_world).font());
-        // FIXME when we can emit this in the right thread
-        textJob->onExecute();
-//        textJob->onFinished.connect(textJob.get(), [=](){
-            m_nameNode->setTexture(m_world->renderer()->createTextureFromImageData(textJob->textureSize(), textJob->textureData()));
-//        });
-        m_world->workQueue()->schedule(textJob);
+        setName(arguments[1]);
     } else if (command == "POINT_AT") {
         if (arguments.size() != 2) {
             cerr << "Invalid POINT_AT, no coordinates";
@@ -410,6 +406,21 @@ void Player::update()
     m_commandMutex.unlock();
 }
 
+void Player::setName(const string &name)
+{
+    std::cout << m_world->renderer()->targetSurface()->dpi() << std::endl;
+    GlyphTextureJob job(m_world->font(), name, Units(m_world).hugeFont());
+    job.onExecute();
+    assert(job.textureSize().x > 0 && job.textureSize().y > 0);
+    Texture *t = m_world->renderer()->createTextureFromImageData(job.textureSize(), Texture::RGBA_32, job.textureData());
+    const vec2 size = t->size();
+    const vec2 pos(-size.x/2, 10);
+    m_nameNode->setTexture(t);
+    m_nameNode->setGeometry(rect2d::fromPosSize(pos, t->size()));
+
+    requestPreprocess();
+}
+
 void Player::onTcpMessage(const tcp_client::read_result &res)
 {
     if (!res.success) {
@@ -582,6 +593,10 @@ void Player::updateVisibility()
                 isBlocked = true;
                 break;
             }
+        }
+
+        if (!isBlocked) {
+            m_visiblePlayers.push_back(otherPlayer);
         }
     }
 
