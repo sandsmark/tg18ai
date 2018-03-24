@@ -125,7 +125,6 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_yAnimation->setIterations(1);
     m_yAnimation->setDuration(0.5);
 
-    updateVisibility();
     m_polygon->setGeometry(rect2d::fromXywh(0, 0, m_world->size().x, m_world->size().y));
 
     m_nameNode = TextureNode::create();
@@ -193,7 +192,6 @@ bool Player::handleEvent(Event *event)
             m_position = vec2(rand() % int(m_world->size().x / 2) + m_world->size().y/4, rand() % int(m_world->size().x/2) + m_world->size().y/4);
             m_posNode->setMatrix(mat4::translate2D(m_position));
             m_playerNode->setColor(m_color);
-            updateVisibility();
             reset();
             return true;
         default:
@@ -287,7 +285,6 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
     bottomLeft  = translationMatrix * bottomLeft;
     bottomRight = translationMatrix * bottomRight;
 
-    updateVisibility();
     if (requestedPosition == m_position && rotation == m_rotation) {
         return false;
     }
@@ -405,17 +402,21 @@ json::JSON Player::serializeState() const
 
 void Player::update()
 {
-    if (!isActive()) {
+    if (!isAlive()) {
         return;
     }
 
-    m_commandMutex.lock();
-    if (!m_command.empty()) {
-        handleCommand(m_command, m_arguments);
+    updateVisibility();
+
+    if (isActive()) {
+        m_commandMutex.lock();
+        if (!m_command.empty()) {
+            handleCommand(m_command, m_arguments);
+        }
+        m_command.clear();
+        m_arguments.clear();
+        m_commandMutex.unlock();
     }
-    m_command.clear();
-    m_arguments.clear();
-    m_commandMutex.unlock();
 }
 
 void Player::setName(const string &name)

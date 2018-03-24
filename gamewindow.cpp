@@ -128,17 +128,13 @@ vector<vec2> GameWindow::playerPositions(Player *exceptPlayer) const
 
 void GameWindow::onBeforeRender()
 {
-    for (shared_ptr<Player> player : m_players) {
-        player->update();
-    }
 }
 
 void GameWindow::onTick()
 {
-    static std::chrono::steady_clock clock;
-    static std::chrono::steady_clock::time_point last_update = clock.now();
-    std::cout << "elapsed: " << chrono::duration_cast<chrono::milliseconds>(last_update - clock.now()).count() << std::endl;
-    last_update = clock.now();
+    for (shared_ptr<Player> player : m_players) {
+        player->update();
+    }
 }
 
 bool GameWindow::isInside(const vec2 &position) const
