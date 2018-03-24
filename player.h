@@ -57,6 +57,9 @@ public:
 
     void setName(const string &name);
 
+protected:
+    void onPreprocess() override;
+
 private:
     void onTcpMessage(const tcp_client::read_result& res);
     void updateVisibility();

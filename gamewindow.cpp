@@ -8,6 +8,8 @@
 
 GameWindow::GameWindow()
 {
+    m_nextUpdate = m_clock.now();
+
     try {
         m_tcpServer.start("127.0.0.1", 1337, [=] (const std::shared_ptr<tcp_client>& client) -> bool {
             std::cout << "New client" << std::endl;
@@ -65,10 +67,6 @@ Node *GameWindow::build()
 
 void GameWindow::onEvent(Event *event)
 {
-//    static std::chrono::steady_clock clock;
-//    static std::chrono::steady_clock::time_point last_update = clock.now();
-//    std::cout << chrono::duration_cast<chrono::milliseconds>(last_update - clock.now()).count() << std::endl;
-
     bool needRender = false;
     for (shared_ptr<Player> player : m_players) {
         needRender = player->handleEvent(event) || needRender;
@@ -132,6 +130,11 @@ void GameWindow::onBeforeRender()
 
 void GameWindow::onTick()
 {
+    if (m_clock.now() < m_nextUpdate) {
+        return;
+    }
+    m_nextUpdate = m_clock.now() + 20ms;
+
     for (shared_ptr<Player> player : m_players) {
         player->update();
     }

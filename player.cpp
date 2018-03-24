@@ -120,10 +120,10 @@ Player::Player(const vec4 color, GameWindow *world) :
 
     m_xAnimation = make_shared<TransformXAnimation>(m_posNode);
     m_xAnimation->setIterations(1);
-    m_xAnimation->setDuration(0.5);
+    m_xAnimation->setDuration(0.1);
     m_yAnimation = make_shared<TransformYAnimation>(m_posNode);
     m_yAnimation->setIterations(1);
-    m_yAnimation->setDuration(0.5);
+    m_yAnimation->setDuration(0.1);
 
     m_polygon->setGeometry(rect2d::fromXywh(0, 0, m_world->size().x, m_world->size().y));
 
@@ -203,7 +203,12 @@ bool Player::handleEvent(Event *event)
         return false;
     }
 
-    return handleCommand(command, arguments);
+    m_commandMutex.lock();
+    m_command = command;
+    m_arguments = arguments;
+    m_commandMutex.unlock();
+    return true;
+//    return handleCommand(command, arguments);
 }
 
 bool Player::handleCommand(const string &command, const vector<string> &arguments)
@@ -293,6 +298,7 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
     m_xAnimation->keyFrames().clear();
     m_xAnimation->keyFrames().push_back(KeyFrame<float>(0, m_position.x));
     m_xAnimation->keyFrames().push_back(KeyFrame<float>(1, requestedPosition.x));
+    m_world->animationManager()->stop(m_xAnimation);
     if (!m_xAnimation->isRunning()) {
         m_world->animationManager()->start(m_xAnimation);
     }
@@ -300,6 +306,7 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
     m_yAnimation->keyFrames().clear();
     m_yAnimation->keyFrames().push_back(KeyFrame<float>(0, m_position.y));
     m_yAnimation->keyFrames().push_back(KeyFrame<float>(1, requestedPosition.y));
+    m_world->animationManager()->stop(m_yAnimation);
     if (!m_yAnimation->isRunning()) {
         m_world->animationManager()->start(m_yAnimation);
     }
@@ -406,17 +413,13 @@ void Player::update()
         return;
     }
 
-    updateVisibility();
-
-    if (isActive()) {
-        m_commandMutex.lock();
-        if (!m_command.empty()) {
-            handleCommand(m_command, m_arguments);
-        }
-        m_command.clear();
-        m_arguments.clear();
-        m_commandMutex.unlock();
+    m_commandMutex.lock();
+    if (!m_command.empty()) {
+        handleCommand(m_command, m_arguments);
     }
+    m_command.clear();
+    m_arguments.clear();
+    m_commandMutex.unlock();
 }
 
 void Player::setName(const string &name)
@@ -432,6 +435,12 @@ void Player::setName(const string &name)
     m_nameNode->setTexture(t);
     m_nameNode->setGeometry(rect2d::fromPosSize(pos, t->size()));
 
+    requestPreprocess();
+}
+
+void Player::onPreprocess()
+{
+    updateVisibility();
     requestPreprocess();
 }
 

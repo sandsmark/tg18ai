@@ -7,6 +7,7 @@
 
 #include <SimpleJSON/json.hpp>
 #include <tacopie/network/tcp_server.hpp>
+#include <chrono>
 
 class Player;
 
@@ -16,6 +17,7 @@ using tacopie::tcp_server;
 
 using namespace rengine;
 using namespace std;
+using namespace std::chrono_literals;
 
 class GameWindow : public rengine::StandardSurface
 {
@@ -45,6 +47,8 @@ private:
     vector<shared_ptr<Player>> m_players;
     tcp_server m_tcpServer;
     GlyphContext *m_font = nullptr;
+    chrono::steady_clock m_clock;
+    chrono::steady_clock::time_point m_nextUpdate;
 };
 
 #endif // WINDOW_H
