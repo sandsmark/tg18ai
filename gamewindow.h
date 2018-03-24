@@ -43,12 +43,20 @@ public:
     bool isInside(const vec2 &position) const;
 
 private:
+    void handleGameOver();
+    void handleDraw();
+    void handleWinner(shared_ptr<Player> winner);
+
     vector<rect2d> m_rectangles;
     vector<shared_ptr<Player>> m_players;
     tcp_server m_tcpServer;
     GlyphContext *m_font = nullptr;
     chrono::steady_clock m_clock;
     chrono::steady_clock::time_point m_nextUpdate;
+    bool m_gameRunning;
+
+    RectangleNode *m_overlay;
+    TextureNode *m_overlayText;
 };
 
 #endif // WINDOW_H

@@ -264,13 +264,13 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
         bullet->start();
         return true;
     } else if (command == "STRAFE_LEFT") {
-        horizontal = -10;
+        horizontal = -25;
     } else if (command == "STRAFE_RIGHT") {
-        horizontal = 10;
+        horizontal = 25;
     } else if (command == "FORWARD") {
-        vertical = 10;
+        vertical = 25;
     } else if (command == "BACKWARD") {
-        vertical = -10;
+        vertical = -25;
     } else {
         cerr << "unknown command '" << command << "'" << endl;
         return false;
@@ -388,6 +388,18 @@ void Player::setTcpConnection(shared_ptr<tacopie::tcp_client> conn)
     };
 
     m_tcpConnection->async_read(req);
+}
+
+void Player::closeConnection()
+{
+    if (!isActive()) {
+        return;
+    }
+
+    m_tcpConnection->disconnect();
+    for (Bullet *bullet : m_bullets) {
+        bullet->destroy();
+    }
 }
 
 bool Player::isActive() const

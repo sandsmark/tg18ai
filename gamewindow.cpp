@@ -7,7 +7,8 @@
 #include <chrono>
 
 
-GameWindow::GameWindow()
+GameWindow::GameWindow() :
+    m_gameRunning(true)
 {
     m_nextUpdate = m_clock.now();
 
@@ -62,16 +63,28 @@ Node *GameWindow::build()
         *root << player.get();
     }
 
+    m_gameRunning = true;
 
     return root;
 }
 
 void GameWindow::onEvent(Event *event)
 {
+    if (event->type() == Event::KeyDown ) {
+        KeyEvent *keyEvent = KeyEvent::from(event);
+        if (keyEvent->keyCode() == KeyEvent::Key_Q) {
+            Backend::get()->quit();
+            return;
+        }
+    }
+    if (!m_gameRunning) {
+        return;
+    }
+
     bool needRender = false;
+
     for (shared_ptr<Player> player : m_players) {
         needRender = player->handleEvent(event) || needRender;
-
         player->sendUpdate(json::JSON());
     }
 
@@ -97,6 +110,10 @@ shared_ptr<Player> GameWindow::getPlayerAt(vec2 position)
 
 bool GameWindow::onNewClient(std::shared_ptr<tcp_client> client)
 {
+    if (!m_gameRunning) {
+        return false;
+    }
+
     for (shared_ptr<Player> player : m_players) {
         if (player->isActive()) {
             continue;
@@ -131,11 +148,16 @@ void GameWindow::onBeforeRender()
 
 void GameWindow::onTick()
 {
+    if (!m_gameRunning) {
+        return;
+    }
+
     if (m_clock.now() < m_nextUpdate) {
         return;
     }
     m_nextUpdate = m_clock.now() + 20ms;
 
+    vector<shared_ptr<Player>> playersAlive;
     // Collect current states
     unordered_map<int, json::JSON> states;
     for (shared_ptr<Player> player : m_players) {
@@ -143,8 +165,22 @@ void GameWindow::onTick()
             continue;
         }
 
+        playersAlive.push_back(player);
+
         player->update();
         states[player->id] = player->serializeState();
+    }
+
+    if (playersAlive.empty()) {
+        std::cout << "no players alive" << std::endl;
+        handleDraw();
+        return;
+    }
+
+    if (playersAlive.size() == 1) {
+        std::cout << "player won" << std::endl;
+        handleWinner(playersAlive[0]);
+        return;
     }
 
     for (shared_ptr<Player> player : m_players) {
@@ -171,4 +207,23 @@ bool GameWindow::isInside(const vec2 &position) const
     }
 
     return false;
+}
+
+void GameWindow::handleGameOver()
+{
+    m_gameRunning = false;
+    for (shared_ptr<Player> player : m_players) {
+        player->closeConnection();
+    }
+}
+
+void GameWindow::handleDraw()
+{
+    handleGameOver();
+
+}
+
+void GameWindow::handleWinner(shared_ptr<Player> winner)
+{
+    handleGameOver();
 }

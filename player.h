@@ -49,6 +49,7 @@ public:
     void reset();
     void die();
     void setTcpConnection(shared_ptr<tcp_client> conn);
+    void closeConnection();
 
     bool isActive() const;
     bool isAlive() const;

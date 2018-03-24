@@ -12,19 +12,7 @@ PolygonNode::PolygonNode(vec4 color) :
     m_shaderProgram.matrix = m_shaderProgram.resolve("m");
     m_shaderProgram.color = m_shaderProgram.resolve("color");
 
-    m_vertices = (vec2 *) malloc(vertexCount * sizeof(vec2));
-    m_vertices[0] = vec2(100, 100);
-    m_vertices[1] = vec2(100, 200);
-    m_vertices[2] = vec2(200, 100);
-
-    m_vertices[3] = vec2(200, 200);
-    m_vertices[4] = vec2(200, 300);
-    m_vertices[5] = vec2(300, 200);
-
     glGenBuffers(1, &m_vertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, vertexCount * sizeof(vec2), m_vertices, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 PolygonNode::~PolygonNode()
