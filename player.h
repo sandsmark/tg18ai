@@ -17,6 +17,8 @@ using tacopie::tcp_client;
 
 typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setX, &AnimationCurves::linear> RectangleXAnimation;
 typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setY, &AnimationCurves::linear> RectangleYAnimation;
+typedef Animation<TransformNode, float, &TransformNode::setMatrix_x, &AnimationCurves::linear> TransformXAnimation;
+typedef Animation<TransformNode, float, &TransformNode::setMatrix_y, &AnimationCurves::linear> TransformYAnimation;
 
 class Player : public Node
 {
@@ -79,8 +81,8 @@ private:
 
 
     TextureNode *m_nameNode;
-    shared_ptr<RectangleXAnimation> m_xAnimation;
-    shared_ptr<RectangleYAnimation> m_yAnimation;
+    shared_ptr<TransformXAnimation> m_xAnimation;
+    shared_ptr<TransformYAnimation> m_yAnimation;
     vector<vec2> m_visiblePlayers;
 };
 
@@ -112,6 +114,7 @@ private:
     shared_ptr<RectangleXAnimation> m_xAnimation;
     shared_ptr<RectangleYAnimation> m_yAnimation;
     vec2 m_target;
+    bool m_startedInside;
 };
 
 #endif // PLAYER_H

@@ -4,6 +4,8 @@ CONFIG += console c++17
 CONFIG -= app_bundle
 CONFIG -= qt
 
+#CONFIG += sanitizer sanitize_address
+
 SOURCES += main.cpp \
     gamewindow.cpp \
     polygonnode.cpp \

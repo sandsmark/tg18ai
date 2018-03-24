@@ -8,7 +8,8 @@
 
 Bullet::Bullet() :
     m_xAnimation(make_shared<RectangleXAnimation>(this)),
-    m_yAnimation(make_shared<RectangleYAnimation>(this))
+    m_yAnimation(make_shared<RectangleYAnimation>(this)),
+    m_startedInside(false)
 {
 }
 
@@ -33,11 +34,15 @@ void Bullet::setTarget(vec2 target)
 
 void Bullet::start()
 {
+    m_startedInside = m_world->isInside(position());
+
+    float distance = hypot(position().x - m_target.x, position().y - m_target.y);
+
     m_xAnimation->setIterations(1);
-    m_xAnimation->setDuration(0.5);
+    m_xAnimation->setDuration(distance / 1000.);
 
     m_yAnimation->setIterations(1);
-    m_yAnimation->setDuration(0.5);
+    m_yAnimation->setDuration(distance / 1000.);
 
     m_xAnimation->onCompleted.connect(m_xAnimation.get(), [=](){
         if (m_yAnimation->isRunning()) {
@@ -45,6 +50,7 @@ void Bullet::start()
         }
         destroy();
     });
+
     m_yAnimation->onCompleted.connect(m_yAnimation.get(), [=](){
         if (m_xAnimation->isRunning()) {
             return;
@@ -65,12 +71,21 @@ void Bullet::checkHit()
     assert(m_world);
     assert(m_owner);
 
+    if (m_world->isInside(position()) != m_startedInside) {
+        m_xAnimation->requestStop();
+        m_yAnimation->requestStop();
+        setColor(vec4(0, 0, 0, 0));
+        return;
+    }
+
     shared_ptr<Player> target = m_world->getPlayerAt(position());
     if (!target || target.get() == m_owner) {
         return;
     }
 
     target->die();
+    m_xAnimation->requestStop();
+    m_yAnimation->requestStop();
 }
 
 static int s_idCounter = 0;
@@ -103,8 +118,12 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_playerNode = RectangleNode::create(rect2d::fromXywh(-10, -10, 20, 20), color);
     *m_rotateNode << m_playerNode;
 
-    m_xAnimation = make_shared<RectangleXAnimation>(m_playerNode);
-    m_yAnimation = make_shared<RectangleYAnimation>(m_playerNode);
+    m_xAnimation = make_shared<TransformXAnimation>(m_posNode);
+    m_xAnimation->setIterations(1);
+    m_xAnimation->setDuration(0.5);
+    m_yAnimation = make_shared<TransformYAnimation>(m_posNode);
+    m_yAnimation->setIterations(1);
+    m_yAnimation->setDuration(0.5);
 
     updateVisibility();
     m_polygon->setGeometry(rect2d::fromXywh(0, 0, m_world->size().x, m_world->size().y));
@@ -175,6 +194,7 @@ bool Player::handleEvent(Event *event)
             m_posNode->setMatrix(mat4::translate2D(m_position));
             m_playerNode->setColor(m_color);
             updateVisibility();
+            reset();
             return true;
         default:
             return false;
@@ -204,7 +224,7 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
             cerr << "no name given to name command" << endl;
             return false;
         }
-        setName(arguments[1]);
+        setName(arguments[0]);
     } else if (command == "POINT_AT") {
         if (arguments.size() != 2) {
             cerr << "Invalid POINT_AT, no coordinates";
@@ -272,32 +292,24 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
         return false;
     }
 
+
+    m_xAnimation->keyFrames().clear();
+    m_xAnimation->keyFrames().push_back(KeyFrame<float>(0, m_position.x));
+    m_xAnimation->keyFrames().push_back(KeyFrame<float>(1, requestedPosition.x));
+    if (!m_xAnimation->isRunning()) {
+        m_world->animationManager()->start(m_xAnimation);
+    }
+
+    m_yAnimation->keyFrames().clear();
+    m_yAnimation->keyFrames().push_back(KeyFrame<float>(0, m_position.y));
+    m_yAnimation->keyFrames().push_back(KeyFrame<float>(1, requestedPosition.y));
+    if (!m_yAnimation->isRunning()) {
+        m_world->animationManager()->start(m_yAnimation);
+    }
+
     m_position = requestedPosition;
-
-    //m_world->animationManager()->stop(m_xAnimation);
-    //m_world->animationManager()->stop(m_yAnimation);
-
-//    m_xAnimation->keyFrames().clear();
-//    m_xAnimation->keyFrames().push_back(KeyFrame<float>(0, m_position.x));
-//    m_xAnimation->keyFrames().push_back(KeyFrame<float>(1, requestedPosition.x));
-
-//    m_yAnimation->keyFrames().clear();
-//    m_yAnimation->keyFrames().push_back(KeyFrame<float>(0, m_position.y));
-//    m_yAnimation->keyFrames().push_back(KeyFrame<float>(1, requestedPosition.y));
-
-    //m_xAnimation->setIterations(1);
-    //m_xAnimation->setDuration(0.5);
-    //m_yAnimation->setIterations(1);
-    //m_yAnimation->setDuration(0.5);
-
-//    m_world->animationManager()->stop(m_xAnimation);
-//    m_world->animationManager()->stop(m_yAnimation);
-//    m_world->animationManager()->start(m_xAnimation);
-//    m_world->animationManager()->start(m_yAnimation);
-
     m_rotation = rotation;
 
-    m_posNode->setMatrix(mat4::translate2D(m_position));
     m_rotateNode->setMatrix(mat4::rotate2D(m_rotation));
 
     return true;
@@ -310,8 +322,8 @@ rect2d Player::geometry() const
     }
 
     assert(m_playerNode);
-    rect2d orig = m_playerNode->geometry();
-    mat4 matrix = TransformNode::matrixFor(m_playerNode, m_world->renderer()->sceneRoot());
+    const rect2d orig = m_playerNode->geometry();
+    const mat4 matrix = TransformNode::matrixFor(m_playerNode, m_world->renderer()->sceneRoot());
     return rect2d(matrix * orig.tl, matrix * orig.br).normalized();
 }
 
@@ -359,7 +371,7 @@ bool Player::isActive() const
 
 bool Player::isAlive() const
 {
-    return !m_dead && isActive();
+    return !m_dead;
 }
 
 void Player::sendUpdate(const json::JSON &worldState) const
@@ -408,6 +420,7 @@ void Player::update()
 
 void Player::setName(const string &name)
 {
+    std::cout << name << std::endl;
     std::cout << m_world->renderer()->targetSurface()->dpi() << std::endl;
     GlyphTextureJob job(m_world->font(), name, Units(m_world).hugeFont());
     job.onExecute();

@@ -140,3 +140,14 @@ void GameWindow::onTick()
     std::cout << "elapsed: " << chrono::duration_cast<chrono::milliseconds>(last_update - clock.now()).count() << std::endl;
     last_update = clock.now();
 }
+
+bool GameWindow::isInside(const vec2 &position) const
+{
+    for (const rect2d &rectangle : m_rectangles) {
+        if (rectangle.contains(position)) {
+            return true;
+        }
+    }
+
+    return false;
+}

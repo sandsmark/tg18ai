@@ -38,6 +38,8 @@ public:
     void onBeforeRender() override;
     void onTick() override;
 
+    bool isInside(const vec2 &position) const;
+
 private:
     vector<rect2d> m_rectangles;
     vector<shared_ptr<Player>> m_players;
