@@ -35,7 +35,7 @@ public:
 
     GlyphContext *font() const { return m_font; }
 
-    vector<vec2> playerPositions(Player *exceptPlayer) const;
+    vector<shared_ptr<Player>> players(const int exceptPlayer) const;
 
     void onBeforeRender() override;
     void onTick() override;

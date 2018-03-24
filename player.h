@@ -57,6 +57,8 @@ public:
 
     void setName(const string &name);
 
+    vector<int> visiblePlayerIds() const;
+
 protected:
     void onPreprocess() override;
 
@@ -86,7 +88,7 @@ private:
     TextureNode *m_nameNode;
     shared_ptr<TransformXAnimation> m_xAnimation;
     shared_ptr<TransformYAnimation> m_yAnimation;
-    vector<vec2> m_visiblePlayers;
+    vector<int> m_visiblePlayers;
 };
 
 class Bullet : public RectangleNode

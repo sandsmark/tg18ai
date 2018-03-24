@@ -3,6 +3,7 @@
 #include "player.h"
 
 #include <tacopie/utils/error.hpp>
+#include <unordered_map>
 #include <chrono>
 
 
@@ -108,20 +109,20 @@ bool GameWindow::onNewClient(std::shared_ptr<tcp_client> client)
     return false;
 }
 
-vector<vec2> GameWindow::playerPositions(Player *exceptPlayer) const
+vector<shared_ptr<Player> > GameWindow::players(const int exceptPlayer) const
 {
-    vector<vec2> positions;
+    vector<shared_ptr<Player>> ret;
     for (shared_ptr<Player> player : m_players) {
-        if (player.get() == exceptPlayer) {
+        if (player->id == exceptPlayer) {
             continue;
         }
         if (!player->isAlive()) {
             continue;
         }
-        positions.push_back(player->geometry().center());
+        ret.push_back(player);
     }
 
-    return positions;
+    return ret;
 }
 
 void GameWindow::onBeforeRender()
@@ -135,8 +136,29 @@ void GameWindow::onTick()
     }
     m_nextUpdate = m_clock.now() + 20ms;
 
+    // Collect current states
+    unordered_map<int, json::JSON> states;
     for (shared_ptr<Player> player : m_players) {
+        if (!player->isAlive()) {
+            continue;
+        }
+
         player->update();
+        states[player->id] = player->serializeState();
+    }
+
+    for (shared_ptr<Player> player : m_players) {
+        json::JSON others = json::Array();
+
+        for (shared_ptr<Player> other : m_players) {
+            if (other->id == player->id) {
+                continue;
+            }
+            others.append(other->serializeState());
+        }
+        json::JSON worldState;
+        worldState["others"] = move(others);
+        player->sendUpdate(worldState);
     }
 }
 

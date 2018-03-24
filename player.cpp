@@ -39,10 +39,10 @@ void Bullet::start()
     float distance = hypot(position().x - m_target.x, position().y - m_target.y);
 
     m_xAnimation->setIterations(1);
-    m_xAnimation->setDuration(distance / 1000.);
+    m_xAnimation->setDuration(distance / 750.);
 
     m_yAnimation->setIterations(1);
-    m_yAnimation->setDuration(distance / 1000.);
+    m_yAnimation->setDuration(distance / 750.);
 
     m_xAnimation->onCompleted.connect(m_xAnimation.get(), [=](){
         if (m_yAnimation->isRunning()) {
@@ -397,6 +397,7 @@ json::JSON Player::serializeState() const
 {
     json::JSON state;
 
+    state["id"] = id;
     state["x"] = m_position.x;
     state["y"] = m_position.y;
     state["pointing_at_x"] = m_cursorPosition.x;
@@ -436,6 +437,11 @@ void Player::setName(const string &name)
     m_nameNode->setGeometry(rect2d::fromPosSize(pos, t->size()));
 
     requestPreprocess();
+}
+
+vector<int> Player::visiblePlayerIds() const
+{
+    return m_visiblePlayers;
 }
 
 void Player::onPreprocess()
@@ -603,9 +609,10 @@ void Player::updateVisibility()
     // Find visible players
     m_visiblePlayers.clear();
 
-    const vector<vec2> otherPlayers = m_world->playerPositions(this);
-    for (const vec2 &otherPlayer : otherPlayers) {
-        const float angle = atan2(otherPlayer.y - playerCenter.y, otherPlayer.x - playerCenter.x);
+    const vector<shared_ptr<Player>> otherPlayers = m_world->players(id);
+    for (const shared_ptr<Player> &otherPlayer : otherPlayers) {
+        const vec2 otherPos = otherPlayer->geometry().center();
+        const float angle = atan2(otherPos.y - playerCenter.y, otherPos.x - playerCenter.x);
         Line ray(playerCenter, vec2(playerCenter.x + cos(angle), playerCenter.y + sin(angle)));
 
         bool isBlocked = false;
@@ -619,7 +626,7 @@ void Player::updateVisibility()
         }
 
         if (!isBlocked) {
-            m_visiblePlayers.push_back(otherPlayer);
+            m_visiblePlayers.push_back(otherPlayer->id);
         }
     }
 
