@@ -21,6 +21,11 @@ typedef Animation<RectangleNodeBase, float, &RectangleNodeBase::setY, &Animation
 class Player : Node
 {
 public:
+    const int id;
+
+    Player() = delete;
+    Player(const Player &) = delete;
+
     Player(const vec4 color, GameWindow *world);
     ~Player();
 
@@ -39,8 +44,9 @@ public:
     void setTcpConnection(shared_ptr<tcp_client> conn);
 
     bool isActive() const;
+    bool isAlive() const;
 
-    void sendUpdate() const;
+    void sendUpdate(const json::JSON &worldState) const;
 
     json::JSON serializeState() const;
 
@@ -68,7 +74,11 @@ private:
     string m_command;
     vector<string> m_arguments;
 
+
     TextureNode *m_nameNode;
+    shared_ptr<RectangleXAnimation> m_xAnimation;
+    shared_ptr<RectangleYAnimation> m_yAnimation;
+    vector<vec2> m_visiblePlayers;
 };
 
 class Bullet : public RectangleNode

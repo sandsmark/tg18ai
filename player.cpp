@@ -73,7 +73,10 @@ void Bullet::checkHit()
     target->die();
 }
 
+static int s_idCounter = 0;
+
 Player::Player(const vec4 color, GameWindow *world) :
+    id(s_idCounter++),
     m_world(world),
     m_color(color)
 {
@@ -99,6 +102,9 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_playerNode = RectangleNode::create(rect2d::fromXywh(-10, -10, 20, 20), color);
     *m_rotateNode << m_playerNode;
 
+    m_xAnimation = make_shared<RectangleXAnimation>(m_playerNode);
+    m_yAnimation = make_shared<RectangleYAnimation>(m_playerNode);
+
     updateVisibility();
     m_polygon->setGeometry(rect2d::fromXywh(0, 0, m_world->size().x, m_world->size().y));
 
@@ -119,6 +125,10 @@ Node *Player::node()
 
 bool Player::handleEvent(Event *event)
 {
+    if (m_dead) {
+        return false;
+    }
+
     // check if we're remote controlled
     if (isActive()) {
         return false;
@@ -177,6 +187,10 @@ bool Player::handleEvent(Event *event)
 
 bool Player::handleCommand(const string &command, const vector<string> &arguments)
 {
+    if (m_dead) {
+        return false;
+    }
+
     vec2 requestedPosition = m_position;
 
     int horizontal = 0;
@@ -262,6 +276,28 @@ bool Player::handleCommand(const string &command, const vector<string> &argument
     }
 
     m_position = requestedPosition;
+
+    //m_world->animationManager()->stop(m_xAnimation);
+    //m_world->animationManager()->stop(m_yAnimation);
+
+//    m_xAnimation->keyFrames().clear();
+//    m_xAnimation->keyFrames().push_back(KeyFrame<float>(0, m_position.x));
+//    m_xAnimation->keyFrames().push_back(KeyFrame<float>(1, requestedPosition.x));
+
+//    m_yAnimation->keyFrames().clear();
+//    m_yAnimation->keyFrames().push_back(KeyFrame<float>(0, m_position.y));
+//    m_yAnimation->keyFrames().push_back(KeyFrame<float>(1, requestedPosition.y));
+
+    //m_xAnimation->setIterations(1);
+    //m_xAnimation->setDuration(0.5);
+    //m_yAnimation->setIterations(1);
+    //m_yAnimation->setDuration(0.5);
+
+//    m_world->animationManager()->stop(m_xAnimation);
+//    m_world->animationManager()->stop(m_yAnimation);
+//    m_world->animationManager()->start(m_xAnimation);
+//    m_world->animationManager()->start(m_yAnimation);
+
     m_rotation = rotation;
 
     m_posNode->setMatrix(mat4::translate2D(m_position));
@@ -307,7 +343,12 @@ bool Player::isActive() const
     return m_tcpConnection && m_tcpConnection->is_connected();
 }
 
-void Player::sendUpdate() const
+bool Player::isAlive() const
+{
+    return !m_dead && isActive();
+}
+
+void Player::sendUpdate(const json::JSON &worldState) const
 {
     if (!m_tcpConnection) {
         return;
@@ -316,6 +357,7 @@ void Player::sendUpdate() const
     json::JSON message;
     message["type"] = "update";
     message["you"] = serializeState();
+    message["world"] = worldState;
     string serialized = message.dump(1, " ", " ") + "\n";
 
     m_tcpConnection->async_write({vector<char>(serialized.begin(), serialized.end()), nullptr});
@@ -482,7 +524,6 @@ void Player::updateVisibility()
         angles.push_back(angle);
         angles.push_back(angle + 0.0001);
 
-
         const vec2 bottomRight (block.br);
         angle = atan2(bottomRight.y - playerCenter.y, bottomRight.x - playerCenter.x);
         angles.push_back(angle - 0.0001);
@@ -507,6 +548,26 @@ void Player::updateVisibility()
         segments.push_back(Line(topRight, bottomRight));
     }
 
+    // Find visible players
+    m_visiblePlayers.clear();
+
+    const vector<vec2> otherPlayers = m_world->playerPositions(this);
+    for (const vec2 &otherPlayer : otherPlayers) {
+        const float angle = atan2(otherPlayer.y - playerCenter.y, otherPlayer.x - playerCenter.x);
+        Line ray(playerCenter, vec2(playerCenter.x + cos(angle), playerCenter.y + sin(angle)));
+
+        bool isBlocked = false;
+        for (const Line &segment : segments) {
+            const Line::Intersection intersection = ray.intersection(segment);
+
+            if (intersection) {
+                isBlocked = true;
+                break;
+            }
+        }
+    }
+
+    // Find visible regions
     std::sort(angles.begin(), angles.end());
 
     vector<vec2> points;
@@ -537,7 +598,7 @@ void Player::updateVisibility()
     if (points.size() < 3) {
         return;
     }
-
     points.push_back(points[1]); // complete it
     m_polygon->setPoints(points);
+
 }

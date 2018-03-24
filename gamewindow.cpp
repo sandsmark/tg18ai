@@ -3,6 +3,7 @@
 #include "player.h"
 
 #include <tacopie/utils/error.hpp>
+#include <chrono>
 
 
 GameWindow::GameWindow()
@@ -39,7 +40,9 @@ Node *GameWindow::build()
     const int width = size().x;
     const int height = size().y;
 
-    for (int i=0; i<10; i++) {
+    rand();
+    const int rectCount = (rand() % 10) + 5;
+    for (int i=0; i<rectCount; i++) {
         const int rectWidth = (rand() % 200) + 20;
         const int rectHeight = (rand() % 200) + 20;
         rect2d geometry = rect2d::fromXywh(rand() % (width - rectWidth), rand() % (height - rectHeight), rectWidth, rectHeight);
@@ -62,14 +65,15 @@ Node *GameWindow::build()
 
 void GameWindow::onEvent(Event *event)
 {
+//    static std::chrono::steady_clock clock;
+//    static std::chrono::steady_clock::time_point last_update = clock.now();
+//    std::cout << chrono::duration_cast<chrono::milliseconds>(last_update - clock.now()).count() << std::endl;
+
     bool needRender = false;
     for (shared_ptr<Player> player : m_players) {
         needRender = player->handleEvent(event) || needRender;
 
-        player->sendUpdate();
-        if (needRender) {
-            break;
-        }
+        player->sendUpdate(json::JSON());
     }
 
     if (needRender) {
@@ -102,9 +106,33 @@ bool GameWindow::onNewClient(std::shared_ptr<tcp_client> client)
     return false;
 }
 
+vector<vec2> GameWindow::playerPositions(Player *exceptPlayer) const
+{
+    vector<vec2> positions;
+    for (shared_ptr<Player> player : m_players) {
+        if (player.get() == exceptPlayer) {
+            continue;
+        }
+        if (!player->isAlive()) {
+            continue;
+        }
+        positions.push_back(player->geometry().center());
+    }
+
+    return positions;
+}
+
 void GameWindow::onBeforeRender()
 {
     for (shared_ptr<Player> player : m_players) {
         player->update();
     }
+}
+
+void GameWindow::onTick()
+{
+    static std::chrono::steady_clock clock;
+    static std::chrono::steady_clock::time_point last_update = clock.now();
+    std::cout << "elapsed: " << chrono::duration_cast<chrono::milliseconds>(last_update - clock.now()).count() << std::endl;
+    last_update = clock.now();
 }

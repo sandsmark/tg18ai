@@ -5,7 +5,7 @@ from random import random
 from time import sleep
 
 s = socket.socket()         # Create a socket object
-host = socket.gethostname() # Get local machine name
+host = "127.0.0.1" # Get local machine name
 port = 1337                # Reserve a port for your service.
 
 s.connect((host, port))

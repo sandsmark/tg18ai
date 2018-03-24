@@ -33,8 +33,10 @@ public:
 
     GlyphContext *font() const { return m_font; }
 
+    vector<vec2> playerPositions(Player *exceptPlayer) const;
 
     void onBeforeRender() override;
+    void onTick() override;
 
 private:
     vector<rect2d> m_rectangles;
