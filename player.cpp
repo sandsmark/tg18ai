@@ -6,11 +6,19 @@
 
 #include <mutex>
 
+int Bullet::s_idCounter;
+
 Bullet::Bullet() :
+    id(s_idCounter++),
     m_xAnimation(make_shared<RectangleXAnimation>(this)),
     m_yAnimation(make_shared<RectangleYAnimation>(this)),
     m_startedInside(false)
 {
+}
+
+Bullet::~Bullet()
+{
+    m_owner->removeBullet(this);
 }
 
 void Bullet::setOwner(Player *owner)
@@ -64,6 +72,7 @@ void Bullet::start()
     m_world->animationManager()->start(m_xAnimation);
     m_world->animationManager()->start(m_yAnimation);
 
+    m_owner->addBullet(this);
 }
 
 void Bullet::checkHit()
@@ -88,7 +97,20 @@ void Bullet::checkHit()
     m_yAnimation->requestStop();
 }
 
-static int s_idCounter = 0;
+json::JSON Bullet::serializeState() const
+{
+    json::JSON state;
+
+    state["id"] = id;
+    state["x"] = geometry().center().x;
+    state["y"] = geometry().center().y;
+    state["target_x"] = m_target.x;
+    state["target_y"] = m_target.y;
+
+    return state;
+}
+
+int Player::s_idCounter = 0;
 
 Player::Player(const vec4 color, GameWindow *world) :
     id(s_idCounter++),
@@ -405,6 +427,13 @@ json::JSON Player::serializeState() const
     state["rotation"] = m_rotation;
     state["alive"] = !m_dead;
 
+    // TODO: only show visible bullets?
+    json::JSON bullets = json::Array();
+    for (Bullet *bullet : m_bullets) {
+        bullets.append(bullet->serializeState());
+    }
+    state["bullets"] = move(bullets);
+
     return state;
 }
 
@@ -442,6 +471,17 @@ void Player::setName(const string &name)
 vector<int> Player::visiblePlayerIds() const
 {
     return m_visiblePlayers;
+}
+
+void Player::addBullet(Bullet *bullet)
+{
+    m_bullets.insert(bullet);
+}
+
+void Player::removeBullet(Bullet *bullet)
+{
+    m_bullets.erase(bullet);
+
 }
 
 void Player::onPreprocess()

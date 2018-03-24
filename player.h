@@ -2,6 +2,7 @@
 #define PLAYER_H
 
 #include "rengine.h"
+#include <set>
 
 #include <tacopie/network/tcp_client.hpp>
 #include <SimpleJSON/json.hpp>
@@ -9,6 +10,7 @@
 class PolygonNode;
 class GameWindow;
 class Player;
+class Bullet;
 
 using namespace rengine;
 using namespace std;
@@ -23,6 +25,8 @@ typedef Animation<TransformNode, float, &TransformNode::setMatrix_y, &AnimationC
 class Player : public Node
 {
 public:
+    static int s_idCounter;
+
     const int id;
 
     Player() = delete;
@@ -59,6 +63,9 @@ public:
 
     vector<int> visiblePlayerIds() const;
 
+    void addBullet(Bullet *bullet);
+    void removeBullet(Bullet *bullet);
+
 protected:
     void onPreprocess() override;
 
@@ -89,12 +96,17 @@ private:
     shared_ptr<TransformXAnimation> m_xAnimation;
     shared_ptr<TransformYAnimation> m_yAnimation;
     vector<int> m_visiblePlayers;
+    set<Bullet*> m_bullets;
 };
 
 class Bullet : public RectangleNode
 {
 public:
+    static int s_idCounter;
+    const int id;
+
     Bullet();
+    ~Bullet();
 
     RENGINE_ALLOCATION_POOL_DECLARATION(Bullet, BulletNode);
 
@@ -104,6 +116,7 @@ public:
     void checkHit();
 
     static Bullet *create(Player *owner, vec2 target, vec4 color) {
+
         Bullet *node = create();
         node->setOwner(owner);
         node->setTarget(target);
@@ -112,6 +125,8 @@ public:
 
         return node;
     }
+
+    json::JSON serializeState() const;
 
 private:
     Player *m_owner = nullptr;
