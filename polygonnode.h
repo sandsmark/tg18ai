@@ -25,7 +25,6 @@ private:
 
     int m_vertexCount;
     GLuint m_vertexBuffer;
-    vec2 *m_vertices;
 
     bool m_initialized = false;
     vec4 m_color;

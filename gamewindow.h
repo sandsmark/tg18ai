@@ -43,6 +43,9 @@ public:
     bool isInside(const vec2 &position) const;
 
 private:
+    void setOverlayText(const string &text);
+    void setGameRunning(const bool running);
+
     void handleGameOver();
     void handleDraw();
     void handleWinner(shared_ptr<Player> winner);

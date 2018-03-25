@@ -466,9 +466,7 @@ void Player::update()
 
 void Player::setName(const string &name)
 {
-    std::cout << name << std::endl;
-    std::cout << m_world->renderer()->targetSurface()->dpi() << std::endl;
-    GlyphTextureJob job(m_world->font(), name, Units(m_world).hugeFont());
+    GlyphTextureJob job(m_world->font(), name, Units(m_world).font());
     job.onExecute();
     assert(job.textureSize().x > 0 && job.textureSize().y > 0);
     Texture *t = m_world->renderer()->createTextureFromImageData(job.textureSize(), Texture::RGBA_32, job.textureData());

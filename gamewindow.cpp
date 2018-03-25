@@ -55,15 +55,21 @@ Node *GameWindow::build()
         m_rectangles.push_back(geometry);
     }
 
-    m_players.push_back(make_shared<Player>(vec4(1, .5, .5, 1), this));
-    m_players.push_back(make_shared<Player>(vec4(.5, 1, .5, 1), this));
-    m_players.push_back(make_shared<Player>(vec4(.5, .5, 1, 1), this));
+    m_players.push_back(make_shared<Player>(vec4(1, .6, .6, 1), this));
+    m_players.push_back(make_shared<Player>(vec4(.6, 1, .6, 1), this));
+    m_players.push_back(make_shared<Player>(vec4(.6, .6, 1, 1), this));
 
     for (shared_ptr<Player> player : m_players) {
         *root << player.get();
     }
 
-    m_gameRunning = true;
+    m_overlay = RectangleNode::create(rect2d::fromPosSize(vec2(0, 0), size()), vec4(0.f, 0.f, 0.f, 0.5));
+    *root << m_overlay;
+    m_overlayText = TextureNode::create();
+    *m_overlay << m_overlayText;
+    setOverlayText("Press space to start");
+
+    m_gameRunning = false;
 
     return root;
 }
@@ -75,8 +81,12 @@ void GameWindow::onEvent(Event *event)
         if (keyEvent->keyCode() == KeyEvent::Key_Q) {
             Backend::get()->quit();
             return;
+        } else if (keyEvent->keyCode() == KeyEvent::Key_Space) {
+            setGameRunning(!m_gameRunning);
+            return;
         }
     }
+
     if (!m_gameRunning) {
         return;
     }
@@ -207,6 +217,34 @@ bool GameWindow::isInside(const vec2 &position) const
     }
 
     return false;
+}
+
+void GameWindow::setOverlayText(const string &text)
+{
+    GlyphTextureJob job(font(), text, Units(this).hugeFont());
+    job.onExecute();
+    assert(job.textureSize().x > 0 && job.textureSize().y > 0);
+    Texture *t = renderer()->createTextureFromImageData(job.textureSize(), Texture::RGBA_32, job.textureData());
+    const vec2 size = t->size();
+    const vec2 pos(m_overlay->geometry().width()/2 - size.x/2, m_overlay->geometry().height()/2 - size.y / 2);
+    m_overlayText->setTexture(t);
+    m_overlayText->setGeometry(rect2d::fromPosSize(pos, t->size()));
+}
+
+void GameWindow::setGameRunning(const bool running)
+{
+    if (running == m_gameRunning) {
+        return;
+    }
+    m_gameRunning = running;
+
+    if (m_gameRunning) {
+        renderer()->sceneRoot()->remove(m_overlay);
+    } else {
+        renderer()->sceneRoot()->append(m_overlay);
+        setOverlayText("Paused, press space to continue");
+    }
+    requestRender();
 }
 
 void GameWindow::handleGameOver()
