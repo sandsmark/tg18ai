@@ -98,6 +98,8 @@ private:
     shared_ptr<TransformYAnimation> m_yAnimation;
     vector<int> m_visiblePlayers;
     set<Bullet*> m_bullets;
+
+    std::shared_ptr<GlyphTextureJob> m_nameJob;
 };
 
 class Bullet : public RectangleNode

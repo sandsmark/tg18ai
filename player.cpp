@@ -466,14 +466,8 @@ void Player::update()
 
 void Player::setName(const string &name)
 {
-    GlyphTextureJob job(m_world->font(), name, Units(m_world).font());
-    job.onExecute();
-    assert(job.textureSize().x > 0 && job.textureSize().y > 0);
-    Texture *t = m_world->renderer()->createTextureFromImageData(job.textureSize(), Texture::RGBA_32, job.textureData());
-    const vec2 size = t->size();
-    const vec2 pos(-size.x/2, 10);
-    m_nameNode->setTexture(t);
-    m_nameNode->setGeometry(rect2d::fromPosSize(pos, t->size()));
+    m_nameJob = std::make_shared<GlyphTextureJob>(m_world->font(), name, Units(m_world).font());
+    world()->workQueue()->schedule(m_nameJob);
 
     requestPreprocess();
 }
@@ -496,6 +490,20 @@ void Player::removeBullet(Bullet *bullet)
 
 void Player::onPreprocess()
 {
+    if (m_nameJob) {
+        if (m_nameJob->hasCompleted()) {
+            Texture *t = m_world->renderer()->createTextureFromImageData(m_nameJob->textureSize(), Texture::RGBA_32, m_nameJob->textureData());
+            const vec2 size = t->size();
+            const vec2 pos(-size.x/2, 10);
+            m_nameNode->setTexture(t);
+            m_nameNode->setGeometry(rect2d::fromPosSize(pos, t->size()));
+
+            m_nameJob.reset();
+        } else {
+            requestPreprocess();
+        }
+    }
+
     updateVisibility();
     requestPreprocess();
 }
