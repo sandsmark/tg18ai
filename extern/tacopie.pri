@@ -8,6 +8,9 @@ SOURCES += \
            $$PWD/tacopie/sources/network/common/tcp_socket.cpp
 
 win32 {
+    DEFINES += _WIN32_WINNT=0x0600
+    LIBS += -lws2_32
+
     DEFINES += WIN32_LEAN_AND_MEAN _UNICODE _UNICODE
     SOURCES += \
                $$PWD/tacopie/sources/network/windows/windows_self_pipe.cpp \

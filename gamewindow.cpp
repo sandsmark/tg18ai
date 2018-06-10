@@ -13,7 +13,7 @@ GameWindow::GameWindow() :
     m_nextUpdate = m_clock.now();
 
     try {
-        m_tcpServer.start("127.0.0.1", 1337, [=] (const std::shared_ptr<tcp_client>& client) -> bool {
+        m_tcpServer.start("localhost", 1337, [=] (const std::shared_ptr<tcp_client>& client) -> bool {
             std::cout << "New client" << std::endl;
             return this->onNewClient(client);
         });

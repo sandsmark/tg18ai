@@ -11,6 +11,11 @@ extern "C" {
 #include <signal.h>
 }
 
+#ifdef _WIN32
+#include <winsock2.h>
+#endif//_WIN32
+
+
 RENGINE_DEFINE_GLOBALS
 
 RENGINE_ALLOCATION_POOL_DEFINITION(Bullet, BulletNode);
@@ -18,11 +23,23 @@ RENGINE_ALLOCATION_POOL_DEFINITION(Bullet, BulletNode);
 void sigintHandler(int)
 {
     cout << "quitting gracefully" << endl;
+
     Backend::get()->quit();
 }
 
 int main(int argc, char **argv)
 {
+#ifdef _WIN32
+    //! Windows netword DLL init
+    WORD version = MAKEWORD(2, 2);
+    WSADATA data;
+
+    if (WSAStartup(version, &data) != 0) {
+        std::cerr << "WSAStartup() failure" << std::endl;
+        return -1;
+    }
+#endif//_WIN32
+
     RENGINE_ALLOCATION_POOL(Bullet, BulletNode, 1024);
     RENGINE_ALLOCATION_POOL(rengine::TransformNode, rengine_TransformNode, 256);
     RENGINE_ALLOCATION_POOL(rengine::SimplifiedTransformNode, rengine_SimplifiedTransformNode, 256);
@@ -42,6 +59,11 @@ int main(int argc, char **argv)
     signal(SIGINT, &sigintHandler);
 
     backend.run();
+
+#ifdef _WIN32
+    WSACleanup();
+#endif//_WIN32
+
 
     return 0;
 }
