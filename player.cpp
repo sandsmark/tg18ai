@@ -6,6 +6,11 @@
 
 #include <mutex>
 
+#ifndef M_PI_2
+// fucking wintendo
+#define M_PI_2		1.57079632679489661923
+#endif
+
 int Bullet::s_idCounter;
 
 Bullet::Bullet() :
