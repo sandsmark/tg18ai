@@ -29,6 +29,8 @@ void sigintHandler(int)
 
 int main(int argc, char **argv)
 {
+    (void)argc;
+    (void)argv;
 #ifdef _WIN32
     //! Windows netword DLL init
     WORD version = MAKEWORD(2, 2);

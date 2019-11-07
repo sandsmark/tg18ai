@@ -23,10 +23,8 @@ private:
         int color;
     } m_shaderProgram;
 
-    int m_vertexCount;
     GLuint m_vertexBuffer;
 
-    bool m_initialized = false;
     vec4 m_color;
 
     vector<vec2> m_points;
