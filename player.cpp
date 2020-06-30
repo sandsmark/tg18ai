@@ -13,6 +13,11 @@
 
 int Bullet::s_idCounter;
 
+#define TURRET_WIDTH 14
+#define TURRET_HEIGHT 14
+#define PLAYER_WIDTH 20
+#define PLAYER_HEIGHT 20
+
 Bullet::Bullet() :
     id(s_idCounter++),
     m_xAnimation(make_shared<RectangleXAnimation>(this)),
@@ -142,8 +147,13 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_rotateNode->setMatrix(mat4::rotate2D(m_rotation));
     *m_posNode << m_rotateNode;
 
-    m_playerNode = RectangleNode::create(rect2d::fromXywh(-10, -10, 20, 20), color);
-    *m_rotateNode << m_playerNode;
+    RectangleNode *turretNode = RectangleNode::create(rect2d::fromXywh(std::hypot(PLAYER_WIDTH/2, PLAYER_HEIGHT/2),
+                                                                       -TURRET_HEIGHT/2,
+                                                                       TURRET_WIDTH, TURRET_HEIGHT), color);
+    *m_rotateNode << turretNode;
+
+    m_playerNode = RectangleNode::create(rect2d::fromXywh(-PLAYER_WIDTH/2, -PLAYER_HEIGHT/2, PLAYER_WIDTH, PLAYER_HEIGHT), color);
+    *m_posNode << m_playerNode;
 
     m_xAnimation = make_shared<TransformXAnimation>(m_posNode);
     m_xAnimation->setIterations(1);
