@@ -2,6 +2,8 @@
 
 #include "player.h"
 
+#include "Perfect_Dark_Zero.ttf.h"
+
 #include <tacopie/utils/error.hpp>
 #include <unordered_map>
 #include <chrono>
@@ -31,10 +33,9 @@ GameWindow::~GameWindow()
 
 Node *GameWindow::build()
 {
-    const char *fontFile = "Perfect_Dark_Zero.ttf";
-    m_font = new GlyphContext(fontFile);
+    m_font = new GlyphContext(resource_Perfect_Dark_Zero_ttf_data);
     if (!m_font->isValid()) {
-        cerr << "Failed to load '" << fontFile << endl;
+        cerr << "Failed to load font" << endl;
     }
 
     assert(m_font->isValid());

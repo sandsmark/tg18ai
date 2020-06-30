@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.6)
 project(tg18ai)
 
+set (CMAKE_CXX_STANDARD 17)
+set(CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 if(UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
@@ -69,9 +73,11 @@ else() # (RENGINE_USE_SDL)
     add_definitions(-DRENGINE_BACKEND_SDL)
 endif()
 
-find_package(OpenGL)
-if (OPENGL_FOUND)
-    set(RENGINE_LIBS ${RENGINE_LIBS} ${OPENGL_LIBRARIES})
+find_package(OpenGL COMPONENTS EGL)
+find_package(GLEW REQUIRED)
+
+if (OpenGL_EGL_FOUND)
+    set(RENGINE_LIBS ${RENGINE_LIBS} OpenGL::EGL GLEW::GLEW)
     add_definitions(-DRENGINE_OPENGL_DESKTOP)
 else()
     message(WARNING, "OpenGL was not found, assuming OpenGL ES 2.0 in default locations...")
@@ -105,14 +111,18 @@ else()
     )
 endif()
 
+add_subdirectory(tools/resgen)
+add_resource(FONT_PERFECT_DARK_ZERO Perfect_Dark_Zero.ttf)
+
 set(APP_SOURCES
     main.cpp
     gamewindow.cpp
     player.cpp
     polygonnode.cpp
+    ${FONT_PERFECT_DARK_ZERO}
 )
 
 add_executable(tg18ai ${APP_SOURCES} ${TACOPIE_SOURCES})
 target_link_libraries(tg18ai ${RENGINE_LIBS} ${WIN_LIBS})
-include_directories(extern/rengine/include/ extern/rengine/3rdparty/ extern/tacopie/includes/ extern/)
+include_directories(extern/rengine/include/ extern/rengine/3rdparty/ extern/tacopie/includes/ extern/ ${PROJECT_BINARY_DIR})
 
