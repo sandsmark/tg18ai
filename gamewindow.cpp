@@ -269,5 +269,6 @@ void GameWindow::handleDraw()
 
 void GameWindow::handleWinner(shared_ptr<Player> winner)
 {
+    std::cout << winner->name() << " won" << std::endl;
     handleGameOver();
 }

@@ -60,6 +60,7 @@ public:
 
     void update();
 
+    const std::string &name() const { return m_name; }
     void setName(const string &name);
 
     vector<int> visiblePlayerIds() const;
@@ -100,6 +101,8 @@ private:
     set<Bullet*> m_bullets;
 
     std::shared_ptr<GlyphTextureJob> m_nameJob;
+
+    std::string m_name;
 };
 
 class Bullet : public RectangleNode

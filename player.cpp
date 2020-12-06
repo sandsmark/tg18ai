@@ -479,6 +479,7 @@ void Player::update()
 
 void Player::setName(const string &name)
 {
+    m_name = name;
     m_nameJob = std::make_shared<GlyphTextureJob>(m_world->font(), name, Units(m_world).font());
     world()->workQueue()->schedule(m_nameJob);
 
