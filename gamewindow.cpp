@@ -42,6 +42,9 @@ Node *GameWindow::build()
 
     Node *root = Node::create();
 
+    m_blurNode = BlurNode::create(20);
+    *root << m_blurNode;
+
     const int width = size().x;
     const int height = size().y;
 
@@ -52,7 +55,7 @@ Node *GameWindow::build()
         const int rectHeight = (rand() % 200) + 20;
         rect2d geometry = rect2d::fromXywh(rand() % (width - rectWidth), rand() % (height - rectHeight), rectWidth, rectHeight);
         RectangleNode *rect = RectangleNode::create(geometry, vec4(1, 1, 1, 0.3));
-        *root << rect;
+        *m_blurNode << rect;
         m_rectangles.push_back(geometry);
     }
 
@@ -61,7 +64,7 @@ Node *GameWindow::build()
     m_players.push_back(make_shared<Player>(vec4(.6, .6, 1, 1), this));
 
     for (shared_ptr<Player> player : m_players) {
-        *root << player.get();
+        *m_blurNode << player.get();
     }
 
     m_overlay = RectangleNode::create(rect2d::fromPosSize(vec2(0, 0), size()), vec4(0.f, 0.f, 0.f, 0.5));
@@ -241,8 +244,10 @@ void GameWindow::setGameRunning(const bool running)
 
     if (m_gameRunning) {
         renderer()->sceneRoot()->remove(m_overlay);
+        m_blurNode->setRadius(0);
     } else {
         renderer()->sceneRoot()->append(m_overlay);
+        m_blurNode->setRadius(20);
         setOverlayText("Paused, press space to continue");
     }
     requestRender();

@@ -60,6 +60,7 @@ private:
 
     RectangleNode *m_overlay;
     TextureNode *m_overlayText;
+    BlurNode *m_blurNode;
 };
 
 #endif // WINDOW_H
