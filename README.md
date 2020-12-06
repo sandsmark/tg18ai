@@ -19,15 +19,15 @@ Learn math and fix this
 Local multiplayer
 -----------------
 
-    - Local LAN UDP broadcast
-    - Multiplayer mode instead of just spectator mode
-        - Limit local visibility
-        - Send commands
-    - Don't need to care about latency on LAN, just do lockstep blah blah.
-    - Low priority:
-        - Dedicated server handling visibility, to avoid cheating. Needs headless etc.
-    - Config file support, save nick
-    - Make (new) start/home screen:
+ - Local LAN UDP broadcast
+ - Multiplayer mode instead of just spectator mode
+     - Limit local visibility
+     - Send commands
+ - Don't need to care about latency on LAN, just do lockstep blah blah.
+ - Low priority:
+     - Dedicated server handling visibility, to avoid cheating. Needs headless etc.
+ - Config file support, save nick
+ - Make (new) start/home screen:
 
 ```
  -----------------------------------
