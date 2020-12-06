@@ -78,7 +78,7 @@ private:
     Node *m_rootNode = nullptr;
     TransformNode *m_posNode = nullptr;
     TransformNode *m_rotateNode = nullptr;
-    RectangleNode *m_playerNode = nullptr;
+    PolygonNode *m_playerNode = nullptr;
     float m_rotation;
     vec2 m_position;
     vec2 m_cursorPosition;

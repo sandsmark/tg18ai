@@ -39,20 +39,12 @@ void PolygonNode::render(const mat4 &proj)
 
     glUseProgram(0);
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
+//    glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void PolygonNode::setPoints(const vector<vec2> &points)
 {
     m_points = points;
-
-    if (!points.empty()) {
-        rect2d boundingBox(points[0], points[0]);
-
-        for (size_t i=1; i<points.size(); i++) {
-            boundingBox |= points[i];
-        }
-        setGeometry(boundingBox);
-    }
 
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, m_points.size() * sizeof(vec2), m_points.data(), GL_STATIC_DRAW);

@@ -133,6 +133,7 @@ Player::Player(const vec4 color, GameWindow *world) :
     vec4 polygonColor = color;
     polygonColor.w = 0.1;
     m_polygon =  new PolygonNode(polygonColor);
+    m_polygon->setGeometry(rect2d::fromXywh(0, 0, m_world->size().x, m_world->size().y));
     *m_rootNode << m_polygon;
 
     m_posNode = TransformNode::create();
@@ -152,7 +153,10 @@ Player::Player(const vec4 color, GameWindow *world) :
                                                                        TURRET_WIDTH, TURRET_HEIGHT), color);
     *m_rotateNode << turretNode;
 
-    m_playerNode = RectangleNode::create(rect2d::fromXywh(-PLAYER_WIDTH/2, -PLAYER_HEIGHT/2, PLAYER_WIDTH, PLAYER_HEIGHT), color);
+//    m_playerNode = RectangleNode::create(rect2d::fromXywh(-PLAYER_WIDTH/2, -PLAYER_HEIGHT/2, PLAYER_WIDTH, PLAYER_HEIGHT), color);
+    m_playerNode = new PolygonNode(color);
+    m_playerNode->setGeometry(rect2d::fromXywh(-PLAYER_WIDTH/2, -PLAYER_HEIGHT/2, PLAYER_WIDTH, PLAYER_HEIGHT));
+
     *m_posNode << m_playerNode;
 
     m_xAnimation = make_shared<TransformXAnimation>(m_posNode);
@@ -517,6 +521,19 @@ void Player::onPreprocess()
             requestPreprocess();
         }
     }
+
+    const float radius = PLAYER_HEIGHT;
+    const float cx = geometry().center().x;
+    const float cy = geometry().center().y;
+
+    vector<vec2> points;
+    for (int i=0; i<6; i++) {
+        float x = cos(i * M_PI / 3. + M_PI_2) * radius + cx;
+        float y = sin(i * M_PI / 3. + M_PI_2) * radius + cy;
+        points.push_back({x, y});
+    }
+
+    m_playerNode->setPoints(points);
 
     updateVisibility();
     requestPreprocess();
