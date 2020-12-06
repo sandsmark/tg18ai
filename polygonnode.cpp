@@ -18,14 +18,11 @@ PolygonNode::~PolygonNode()
     glDeleteBuffers(1, &m_vertexBuffer);
 }
 
-void PolygonNode::render()
+void PolygonNode::render(const mat4 &proj)
 {
     if (m_points.empty()) {
         return;
     }
-
-    mat4 proj = mat4::translate2D(-1.0, 1.0)
-             * mat4::scale2D(2.0f / geometry().width(), -2.0f / geometry().height());
 
     glBindBuffer(GL_ARRAY_BUFFER, m_vertexBuffer);
 

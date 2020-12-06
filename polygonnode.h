@@ -12,7 +12,7 @@ public:
     PolygonNode(vec4 color);
     ~PolygonNode();
 
-    void render() override;
+    void render(const mat4 &proj) override;
 
     void setPoints(const vector<vec2> &points);
     void setColor(const vec4 &color) { m_color = color; }
