@@ -162,8 +162,6 @@ Player::Player(const vec4 color, GameWindow *world) :
     m_yAnimation->setIterations(1);
     m_yAnimation->setDuration(0.1);
 
-    m_polygon->setGeometry(rect2d::fromXywh(0, 0, m_world->size().x, m_world->size().y));
-
     m_nameNode = TextureNode::create();
     *m_posNode << m_nameNode;
     setName("Bot " + to_string(id));
